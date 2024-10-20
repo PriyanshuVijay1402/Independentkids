@@ -11,44 +11,40 @@ async function generateResponse(prompt, model) {
 
     console.log('Raw response:', response.response); // Log raw response for debugging
 
-    let parsedResponse;
-    try {
-      // First, try to parse the entire response as JSON
-      parsedResponse = JSON.parse(response.response);
-      
-      // Check if the parsed response has the expected structure
-      if (parsedResponse.answer && Array.isArray(parsedResponse.suggestions)) {
-        return parsedResponse; // Return the parsed response directly if it has the correct structure
-      }
-    } catch (error) {
-      console.error('Error parsing JSON response:', error);
+    // New regex to match multiple JSON objects
+    const jsonPattern = /(\{[\s\S]*?\})/g;
+    const jsonMatches = response.response.match(jsonPattern);
 
-      // If parsing fails, attempt to extract answer and suggestions using a more flexible regex
-      const jsonPattern = /\{[\s\S]*\}/; // Match any JSON-like structure
-      const jsonMatch = response.response.match(jsonPattern);
-
-      if (jsonMatch) {
-        const jsonString = jsonMatch[0].replace(/`/g, ''); // Remove backticks if present
+    if (jsonMatches) {
+      const parsedResponses = jsonMatches.map(jsonString => {
         try {
-          parsedResponse = JSON.parse(jsonString);
-          if (parsedResponse.answer && Array.isArray(parsedResponse.suggestions)) {
-            return parsedResponse; // Return the parsed response if it has the correct structure
-          }
-        } catch (innerError) {
-          console.error('Error parsing extracted JSON:', innerError);
+          return JSON.parse(jsonString.replace(/`/g, ''));
+        } catch (error) {
+          console.error('Error parsing JSON object:', error);
+          return null;
         }
+      }).filter(obj => obj !== null);
+
+      if (parsedResponses.length > 0) {
+        // Combine all parsed responses
+        const combinedResponse = {
+          answer: parsedResponses.map(r => r.answer).join(' '),
+          suggestions: parsedResponses.flatMap(r => r.suggestions || []),
+          isProfileComplete: parsedResponses.some(r => r.isProfileComplete === true)
+        };
+        return combinedResponse;
       }
     }
 
-    // If we reach here, either parsing failed or the response didn't have the expected structure
-    // Use the entire response as the answer with default suggestions
+    // If parsing fails, use the entire response as the answer with default suggestions
     return {
       answer: response.response,
       suggestions: [
         "What are your children's school and activity schedules?",
         "How would you describe your comfort level with different carpool arrangements (e.g., close friends, neighbors)?",
         "Are there any specific safety measures or requirements you have for your children's carpools?"
-      ]
+      ],
+      isProfileComplete: false
     };
   } catch (error) {
     console.error('Error in generateResponse:', error);
