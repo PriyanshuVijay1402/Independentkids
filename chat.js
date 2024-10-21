@@ -6,8 +6,28 @@ function addMessage(message, isUser = false) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('message');
     messageElement.classList.add(isUser ? 'user-message' : 'assistant-message');
-    messageElement.textContent = message;
+    
+    const messageContent = document.createElement('div');
+    messageContent.classList.add('message-content');
+    messageContent.textContent = message;
+    
+    messageElement.appendChild(messageContent);
     chatContainer.appendChild(messageElement);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function addSuggestions(suggestions) {
+    const suggestionsContainer = document.createElement('div');
+    suggestionsContainer.classList.add('suggestions-container');
+    
+    suggestions.forEach(suggestion => {
+        const suggestionElement = document.createElement('div');
+        suggestionElement.classList.add('suggestion');
+        suggestionElement.textContent = suggestion;
+        suggestionsContainer.appendChild(suggestionElement);
+    });
+    
+    chatContainer.appendChild(suggestionsContainer);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
@@ -42,10 +62,7 @@ async function sendMessage() {
                 addMessage(data.response.answer);
 
                 if (data.response.suggestions && data.response.suggestions.length > 0) {
-                    addMessage("Suggestions:");
-                    data.response.suggestions.forEach(suggestion => {
-                        addMessage(`- ${suggestion}`);
-                    });
+                    addSuggestions(data.response.suggestions);
                 }
             } else if (data.error) {
                 addMessage(`Error: ${data.error}`);
@@ -67,4 +84,4 @@ userInput.addEventListener('keypress', (e) => {
 });
 
 // Initial greeting
-addMessage("Hello! I'm your Carpool Profile Assistant. How can I help you improve your carpool profile today?");
+addMessage("Hello! I'm your Carpool Assistant. How can I help you with your carpooling needs today?");
