@@ -10,12 +10,12 @@ app.use(express.json());
 app.use(cors());
 
 app.get('/status', (req, res) => {
-  res.json({ status: 'Server is running', model: 'llama3.2:1b' });
+  res.json({ status: 'Server is running', model: 'llama3.2:3b' });
 });
 
 app.post('/generate', async (req, res) => {
   try {
-    const { prompt, model = 'llama3.2:1b', context = {} } = req.body;
+    const { prompt, model = 'llama3.2:3b', context = {} } = req.body;
     const engineeredPrompt = engineerPrompt(prompt, context);
     const response = await generateResponse(engineeredPrompt, model);
     res.json({ response });
@@ -35,5 +35,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port} with model llama3.2:1b`);
+  console.log(`Server running at http://localhost:${port} with model llama3.2:3b`);
 });
