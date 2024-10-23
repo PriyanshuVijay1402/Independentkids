@@ -1,6 +1,6 @@
 const express = require('express');
 const { engineerPrompt } = require('./promptEngineering');
-const { generateResponse } = require('./modelInteraction');
+const { generateResponse, resetProfile } = require('./modelInteraction');
 const cors = require('cors');
 
 const app = express();
@@ -15,9 +15,8 @@ app.get('/status', (req, res) => {
 
 app.post('/generate', async (req, res) => {
   try {
-    const { prompt, model = 'llama3.2:3b', context = {} } = req.body;
-    const engineeredPrompt = engineerPrompt(prompt, context);
-    const response = await generateResponse(engineeredPrompt, model);
+    const { prompt } = req.body;
+    const response = await generateResponse(prompt);
     res.json({ response });
   } catch (error) {
     console.error('Error in /generate route:', error);
@@ -29,11 +28,21 @@ app.post('/generate', async (req, res) => {
   }
 });
 
+app.post('/reset-profile', (req, res) => {
+  try {
+    resetProfile();
+    res.json({ status: 'Profile reset successful' });
+  } catch (error) {
+    console.error('Error in /reset-profile route:', error);
+    res.status(500).json({ error: 'Failed to reset profile' });
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'An unexpected error occurred on the server.' });
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port} with model llama3.2:3b`);
+  console.log(`Server running at http://localhost:${port}`);
 });
