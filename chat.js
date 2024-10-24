@@ -44,45 +44,67 @@ function addSuggestions(suggestions) {
 
 async function sendMessage() {
     const message = userInput.value.trim();
-    if (message) {
+    if (!message) return;
+
+    // Disable input and button while processing
+    userInput.disabled = true;
+    sendButton.disabled = true;
+
+    try {
         addMessage(message, true);
         userInput.value = '';
 
-        try {
-            const response = await fetch('http://localhost:3000/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ prompt: message }),
-            });
+        console.log('Sending message:', message);
+        const response = await fetch('http://localhost:3000/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt: message })
+        });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.response && data.response.answer) {
-                addMessage(data.response.answer);
-
-                if (data.response.suggestions && data.response.suggestions.length > 0) {
-                    addSuggestions(data.response.suggestions);
-                }
-
-                // Show reset button when profile is complete
-                if (data.response.isProfileComplete) {
-                    resetButton.style.display = 'block';
-                }
-            } else if (data.error) {
-                addMessage(`Error: ${data.error}`);
-            } else {
-                addMessage("I'm sorry, I couldn't generate a response. Please try again.");
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            addMessage(`Error: ${error.message}. Please check the console for more details.`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
+        console.log('Received response data:', data);
+
+        if (data.response) {
+            console.log('Processing response:', data.response);
+            
+            // Always display the answer if it exists
+            if (data.response.answer) {
+                console.log('Adding message:', data.response.answer);
+                addMessage(data.response.answer);
+            }
+
+            // Add suggestions if they exist
+            if (data.response.suggestions && data.response.suggestions.length > 0) {
+                console.log('Adding suggestions:', data.response.suggestions);
+                addSuggestions(data.response.suggestions);
+            }
+
+            // Show reset button when profile is complete
+            if (data.response.isProfileComplete) {
+                console.log('Profile complete, showing reset button');
+                resetButton.style.display = 'block';
+            }
+        } else if (data.error) {
+            console.error('Error in response:', data.error);
+            addMessage(`Error: ${data.error}`);
+        } else {
+            console.error('Unexpected response format:', data);
+            addMessage("I'm sorry, I couldn't generate a response. Please try again.");
+        }
+    } catch (error) {
+        console.error('Error in sendMessage:', error);
+        addMessage(`Error: ${error.message}. Please check the console for more details.`);
+    } finally {
+        // Re-enable input and button
+        userInput.disabled = false;
+        sendButton.disabled = false;
+        userInput.focus();
     }
 }
 
@@ -99,11 +121,8 @@ async function resetProfile() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // Clear chat
         chatContainer.innerHTML = '';
         resetButton.style.display = 'none';
-
-        // Add initial greeting
         addMessage("Hello! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.");
     } catch (error) {
         console.error('Error:', error);
@@ -113,7 +132,8 @@ async function resetProfile() {
 
 sendButton.addEventListener('click', sendMessage);
 userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
         sendMessage();
     }
 });
