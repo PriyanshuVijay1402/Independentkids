@@ -26,6 +26,7 @@ class CarpoolProfileAgent {
         validationPrompt: `Analyze if the user's answer contains both:
 1. Number of children
 2. Ages of children
+3. user may only have 1 child, put that into consideration
 Response format: { "isValid": boolean, "reason": "explanation" }
 User answer: `,
         followUp: ["For example: '2 children, ages 8 and 10'"],
@@ -75,7 +76,6 @@ User answer: `,
       Response format:
       {
         "question": "your question here",
-        "importance": "brief explanation of why this information helps with carpool matching",
         "category": "one of: preferences, vehicle, safety, schedule, communication"
       }`;
 
@@ -212,7 +212,14 @@ User answer: `,
   }
 
   async handleOptionalPhase(input) {
-    // If there's a current optional question, handle the answer
+    // Handle "End optional questions" command
+    if (input.toLowerCase().includes('end optional questions')) {
+      this.memory.isOptionalPhase = false;
+      this.memory.isConfirmationPhase = true;
+      return this.prepareConfirmation();
+    }
+
+    // If there's a current optional question, handle the answer and generate next question
     if (this.memory.currentOptionalQuestion) {
       if (input.toLowerCase() === 'not applicable') {
         this.memory.profileData.optional[this.memory.currentOptionalQuestion.id] = 'Not applicable';
@@ -220,39 +227,34 @@ User answer: `,
         this.memory.profileData.optional[this.memory.currentOptionalQuestion.id] = input;
       }
       
-      this.memory.currentOptionalQuestion = null;
-      return {
-        answer: "Would you like to provide more additional information?",
-        suggestions: ["Yes, continue", "No, review my profile"],
-        isProfileComplete: false
-      };
-    }
-
-    // Handle user's decision about continuing
-    if (input.toLowerCase().includes('no')) {
-      this.memory.isOptionalPhase = false;
-      this.memory.isConfirmationPhase = true;
-      return this.prepareConfirmation();
-    }
-
-    if (input.toLowerCase().includes('yes')) {
-      const optionalQuestion = await this.generateOptionalQuestion();
-      if (optionalQuestion) {
-        this.memory.currentOptionalQuestion = optionalQuestion;
+      const nextQuestion = await this.generateOptionalQuestion();
+      if (nextQuestion) {
+        this.memory.currentOptionalQuestion = nextQuestion;
         return {
-          answer: `${optionalQuestion.question}\n\nWhy this matters: ${optionalQuestion.importance}\n\nYou can answer the question or type 'not applicable' to skip.`,
-          suggestions: ["Not applicable"],
+          answer: `${nextQuestion.question}\n\nYou can answer the question or type 'not applicable' to skip.`,
+          suggestions: ["Not applicable", "End optional questions and review"],
           isProfileComplete: false
         };
       }
     }
 
-    // Fallback if question generation fails
-    return {
-      answer: "Would you like to continue providing more information?",
-      suggestions: ["Yes, continue", "No, review my profile"],
-      isProfileComplete: false
-    };
+    // Handle initial "yes" to start optional questions
+    if (input.toLowerCase().includes('yes')) {
+      const optionalQuestion = await this.generateOptionalQuestion();
+      if (optionalQuestion) {
+        this.memory.currentOptionalQuestion = optionalQuestion;
+        return {
+          answer: `${optionalQuestion.question}\n\nYou can answer the question or type 'not applicable' to skip.`,
+          suggestions: ["Not applicable", "End optional questions and review"],
+          isProfileComplete: false
+        };
+      }
+    }
+
+    // If we reach here (no question generated or "no" selected), move to confirmation
+    this.memory.isOptionalPhase = false;
+    this.memory.isConfirmationPhase = true;
+    return this.prepareConfirmation();
   }
 
   prepareConfirmation() {
