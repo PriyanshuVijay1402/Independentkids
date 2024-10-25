@@ -344,6 +344,16 @@ Consider "yes", "correct", "right" as confirmation.`
       currentOptionalQuestion: null
     };
   }
+
+  getFirstQuestion() {
+    const firstQuestion = this.mandatoryQuestions[0];
+    this.memory.currentQuestion = firstQuestion.id;
+    return {
+      answer: `${firstQuestion.question}\n\nWhy this matters: ${firstQuestion.importance}`,
+      suggestions: firstQuestion.followUp,
+      isProfileComplete: false
+    };
+  }
 }
 
 // Create agent instance
@@ -358,4 +368,8 @@ function resetProfile() {
   carpoolAgent.reset();
 }
 
-module.exports = { generateResponse, resetProfile };
+function getFirstQuestion() {
+  return carpoolAgent.getFirstQuestion();
+}
+
+module.exports = { generateResponse, resetProfile, getFirstQuestion };

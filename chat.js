@@ -121,12 +121,40 @@ async function resetProfile() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+        const data = await response.json();
         chatContainer.innerHTML = '';
         resetButton.style.display = 'none';
+        
+        // Show initial greeting and first question
         addMessage("Hello! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.");
+        if (data.firstQuestion) {
+            addMessage(data.firstQuestion.answer);
+            if (data.firstQuestion.suggestions) {
+                addSuggestions(data.firstQuestion.suggestions);
+            }
+        }
     } catch (error) {
         console.error('Error:', error);
         addMessage(`Error resetting profile: ${error.message}`);
+    }
+}
+
+async function getFirstQuestion() {
+    try {
+        const response = await fetch('http://localhost:3000/first-question');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.response) {
+            addMessage(data.response.answer);
+            if (data.response.suggestions) {
+                addSuggestions(data.response.suggestions);
+            }
+        }
+    } catch (error) {
+        console.error('Error getting first question:', error);
+        addMessage(`Error: ${error.message}. Please check the console for more details.`);
     }
 }
 
@@ -139,5 +167,6 @@ userInput.addEventListener('keypress', (e) => {
 });
 resetButton.addEventListener('click', resetProfile);
 
-// Initial greeting
+// Initial greeting and first question
 addMessage("Hello! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.");
+getFirstQuestion();

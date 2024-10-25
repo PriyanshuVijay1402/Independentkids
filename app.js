@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { engineerPrompt } = require('./promptEngineering');
-const { generateResponse, resetProfile } = require('./modelInteraction');
+const { generateResponse, resetProfile, getFirstQuestion } = require('./modelInteraction');
 const cors = require('cors');
 
 const app = express();
@@ -24,6 +24,16 @@ app.use((req, res, next) => {
 app.getMaxListeners('/status', (req, res) => {
   res.json({ status: 'Server is running', model: 'llama3.2:3b'});
 })
+
+app.get('/first-question', (req, res) => {
+    try {
+        const response = getFirstQuestion();
+        res.json({ response });
+    } catch (error) {
+        console.error('Error in /first-question route:', error);
+        res.status(500).json({ error: 'Failed to get first question' });
+    }
+});
 
 app.post('/generate', async (req, res) => {
     try {
@@ -50,7 +60,8 @@ app.post('/generate', async (req, res) => {
 app.post('/reset-profile', (req, res) => {
     try {
         resetProfile();
-        res.json({ status: 'Profile reset successful' });
+        const firstQuestion = getFirstQuestion();
+        res.json({ status: 'Profile reset successful', firstQuestion });
     } catch (error) {
         console.error('Error in /reset-profile route:', error);
         res.status(500).json({ error: 'Failed to reset profile' });
