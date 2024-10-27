@@ -1,5 +1,6 @@
 const { Ollama } = require('ollama');
 const { mandatoryQuestions } = require('./ai_vars');
+const prompts = require('./ai_prompt_eng');
 
 class CarpoolProfileAgent {
   constructor() {
@@ -30,24 +31,9 @@ class CarpoolProfileAgent {
         optional: this.memory.profileData.optional
       });
 
-      const prompt = `As a carpool matching assistant, generate a relevant follow-up question based on this profile:
-      ${profileContext}
-      
-      Requirements:
-      1. Question should be specific to carpooling needs
-      2. Don't repeat information already provided
-      3. Focus on practical aspects that could improve carpool matching
-      4. Consider safety, convenience, and compatibility factors
-      
-      Response format:
-      {
-        "question": "your question here",
-        "category": "one of: preferences, vehicle, safety, schedule, communication"
-      }`;
-
       const response = await this.ollama.generate({
         model: 'llama3.2:3b',
-        prompt: prompt
+        prompt: prompts.optionalQuestion(profileContext)
       });
 
       // Fallback question if parsing fails
