@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const { engineerPrompt } = require('./promptEngineering');
 const { generateResponse, resetProfile, getFirstQuestion } = require('./modelInteraction');
 const cors = require('cors');
 
@@ -21,6 +20,7 @@ app.use((req, res, next) => {
     next();
 });
 
+// To Do: moving rout into a different JS e.g. ../rout/rout.js
 app.getMaxListeners('/status', (req, res) => {
   res.json({ status: 'Server is running', model: 'llama3.2:3b'});
 })
@@ -73,11 +73,15 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// TO Do: moving into middle.js
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
     res.status(500).json({ error: 'An unexpected error occurred on the server.' });
 });
+
+// To do: add DB related middleware to another js...
+
 
 // Start server
 app.listen(port, () => {
