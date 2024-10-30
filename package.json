@@ -4,11 +4,14 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "seed": "node db/seeders/seed.js"
   },
   "dependencies": {
+    "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "express": "^4.21.1",
+    "mongoose": "^8.0.3",
     "ollama": "^0.5.9"
   },
   "devDependencies": {

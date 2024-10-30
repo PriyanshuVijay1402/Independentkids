@@ -1,0 +1,137 @@
+{
+  "users": [
+    {
+      "_id": "3c1a3d6e-2b4f-4d81-a5c9-d9aa903ab123",
+      "name": "John Doe",
+      "address": {
+        "street": "123 Main St",
+        "city": "Anytown",
+        "state": "USA",
+        "latitude": 40.730610,
+        "longitude": -73.935242
+      },
+      "email": "john.doe@email.com",
+      "phone": "555-1234",
+      "safety_info": {
+        "drivers": [
+          {
+            "relationship": "self",
+            "driving_record": "clean",
+            "background_check": "passed",
+            "drivingLicense": {
+              "number": "ABC123456",
+              "state": "CA",
+              "expirationDate": "2025-06-30"
+            }
+          }
+        ],
+        "vehicles": [
+          {
+            "_id": 0,
+            "type": "Minivan",
+            "make": "Dodge",
+            "model": "Caravan",
+            "year": 2017,
+            "passengerCapacity": 7,
+            "carSeats": 1,
+            "boosterSeats": 1,
+            "licensePlate": "DEF789",
+            "hasTrunk": true
+          }
+        ]
+      },
+      "isRider": true,
+      "isDriver": true,
+      "friend_list": [
+        "86d9b5f0-4c8a-4f1b-a2e6-bf8b02d7b456",
+        "47e3c2a1-9d14-4b7f-a5c3-c3f1d2e4f789"
+      ],
+      "dependent_information": [
+        {
+          "name": "Jane Doe",
+          "gender": "Female",
+          "age": 12,
+          "grade": 7,
+          "school_info": {
+            "name": "Anytown Middle School",
+            "address": {
+              "street": "456 Oak Rd",
+              "city": "Anytown",
+              "state": "USA",
+              "latitude": 40.725330,
+              "longitude": -73.931642
+            },
+            "start_time": "8:00 AM",
+            "end_time": "3:00 PM"
+          },
+          "activities": [
+            {
+              "name": "Soccer",
+              "address": {
+                "street": "789 Elm St",
+                "city": "Anytown",
+                "state": "USA",
+                "latitude": 40.735690,
+                "longitude": -73.941902
+              },
+              "start_time": "4:00 PM",
+              "end_time": "5:30 PM",
+              "sharing_preferences": {
+                "willing_to_share_rides": true,
+                "sharing_type": "split"
+              },
+              "schedule": [
+                {
+                  "day_of_week": 1,
+                  "transport_availability": {
+                    "dropoff": {
+                      "can_provide": true,
+                      "vechile_id": 0,
+                      "time_window": {
+                        "earliest": "3:30 PM",
+                        "latest": "3:50 PM"
+                      }
+                    },
+                    "pickup": {
+                      "can_provide": false
+                    }
+                  }
+                },
+                {
+                  "day_of_week": 3,
+                  "transport_availability": {
+                    "dropoff": {
+                      "can_provide": false
+                    },
+                    "pickup": {
+                      "can_provide": true,
+                      "vechile_id": 0,
+                      "time_window": {
+                        "earliest": "5:30 PM",
+                        "latest": "5:45 PM"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "additional_info": {
+            "allergies": "peanuts",
+            "carries_medicine": true,
+            "preferred_seat": "window",
+            "needs_early_arrival": 15
+          }
+        }
+      ],
+      "carpool_preference": {
+        "preferred_carpool_group_size": 3,
+        "gender_preference": "same_gender_as_kid",
+        "language_preferences": [
+          "English",
+          "Spanish"
+        ]
+      }
+    }
+  ]
+}
