@@ -125,8 +125,9 @@ async function resetProfile() {
         chatContainer.innerHTML = '';
         resetButton.style.display = 'none';
         
-        // Show initial greeting and first question
-        addMessage("Hello! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.");
+        // Show initial greeting with username
+        await showInitialGreeting();
+        
         if (data.firstQuestion) {
             addMessage(data.firstQuestion.answer);
             if (data.firstQuestion.suggestions) {
@@ -158,6 +159,21 @@ async function getFirstQuestion() {
     }
 }
 
+async function showInitialGreeting() {
+    try {
+        const response = await fetch('http://localhost:3000/api/users');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const users = await response.json();
+        const username = users[0]?.name || "there";
+        addMessage(`Hello, ${username}! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.`);
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        addMessage("Hello! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.");
+    }
+}
+
 sendButton.addEventListener('click', sendMessage);
 userInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -168,5 +184,6 @@ userInput.addEventListener('keypress', (e) => {
 resetButton.addEventListener('click', resetProfile);
 
 // Initial greeting and first question
-addMessage("Hello! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.");
-getFirstQuestion();
+showInitialGreeting().then(() => {
+    getFirstQuestion();
+});
