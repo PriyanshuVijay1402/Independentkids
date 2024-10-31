@@ -79,5 +79,6 @@ The application will be available at http://localhost:3000
 - DELETE `/api/users/:id` - Delete user
 
 ## Development
-
-The project uses `concurrently` to run both the MongoDB service and the Node.js server in development mode. Use `npm run dev` to start both services simultaneously.
+Use `ollama serve` to start ollama, note that llama3.2:3b model will be needed
+Use `sudo service mongodb start` to start MongoDB
+Use `npm run dev` to start both services simultaneously.

@@ -159,14 +159,25 @@ async function getFirstQuestion() {
   }
 }
 
-async function showInitialGreeting() {
+async function getUserById(userId) {
   try {
-    const response = await fetch('http://localhost:3000/api/users');
+    const response = await fetch(`http://localhost:3000/api/users/${userId}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const users = await response.json();
-    const username = users[0]?.name || "there";
+    const user = await response.json();
+    return user;
+  } catch (error) {
+    console.error('Error fetching user by ID:', error);
+    throw error;
+  }
+}
+
+async function showInitialGreeting() {
+  try {
+    const userId = "6722bd9dca5566a55b0c31eb";
+    const user = await getUserById(userId);
+    const username = user?.name || "there";
     addMessage(`Hello, ${username}! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.`);
   } catch (error) {
     console.error('Error fetching user:', error);
