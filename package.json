@@ -4,7 +4,9 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js",
+    "server": "nodemon app.js",
+    "mongodb": "sudo service mongodb start",
+    "dev": "concurrently \"sudo service mongodb start && echo 'MongoDB service started'\" \"npm run server\"",
     "seed": "node db/seeders/seed.js"
   },
   "dependencies": {
