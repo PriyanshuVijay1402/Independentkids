@@ -1,4 +1,4 @@
-const CarpoolProfileAgent = require('./util/ai_util');
+const CarpoolProfileAgent = require('./util/carpoolAgent/CarpoolAgent');
 
 // Create agent instance
 const carpoolAgent = new CarpoolProfileAgent();
