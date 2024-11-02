@@ -5,14 +5,14 @@ const router = express.Router();
 
 router.post('/generate', async (req, res) => {
     try {
-        const { prompt } = req.body;
+        const { prompt, userId } = req.body;
         console.log('Received prompt:', prompt);
 
-        if (!prompt) {
-            return res.status(400).json({ error: 'Prompt is required' });
+        if (!prompt || !userId) {
+            return res.status(400).json({ error: 'Prompt and userId are required' });
         }
 
-        const response = await generateResponse(prompt);
+        const response = await generateResponse(prompt, userId);
         console.log('Generated response:', response);
         res.json({ response });
     } catch (error) {
@@ -25,9 +25,15 @@ router.post('/generate', async (req, res) => {
     }
 });
 
-router.get('/first-question', (req, res) => {
+router.get('/first-question', async (req, res) => {
     try {
-        const response = getFirstQuestion();
+        const { userId } = req.query;
+        if (!userId) {
+            return res.status(400).json({ error: 'userId is required' });
+        }
+
+        const response = await getFirstQuestion(userId);
+        console.debug('First question response:', response);
         res.json({ response });
     } catch (error) {
         console.error('Error in /first-question route:', error);
@@ -35,10 +41,15 @@ router.get('/first-question', (req, res) => {
     }
 });
 
-router.post('/reset', (req, res) => {
+router.post('/reset', async (req, res) => {
     try {
-        resetProfile();
-        const firstQuestion = getFirstQuestion();
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(400).json({ error: 'userId is required' });
+        }
+
+        await resetProfile(userId);
+        const firstQuestion = await getFirstQuestion(userId);
         res.json({ status: 'Profile reset successful', firstQuestion });
     } catch (error) {
         console.error('Error in /reset route:', error);

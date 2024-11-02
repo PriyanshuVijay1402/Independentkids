@@ -1,92 +1,131 @@
-const StateManager = require('./state/StateManager');
-const ValidationHandler = require('./validators/ValidationHandler');
-const QuestionHandler = require('./handlers/QuestionHandler');
-const OptionalQuestionHandler = require('./handlers/OptionalQuestionHandler');
-const ResponseGenerator = require('./handlers/ResponseGenerator');
+const { Ollama } = require('ollama');
+const initialPrompts = require('../prompts/initial_question_prompt');
+const mandatoryPrompts = require('../prompts/mandatory_questions_prompt');
+const optionalPrompts = require('../prompts/optional_questions_prompt');
+const { getCachedUserProfile } = require('../../config/redis');
 
 class CarpoolAgent {
-  constructor(existingUserData = null) {
-    this.stateManager = new StateManager(existingUserData);
-    this.validationHandler = new ValidationHandler();
-    this.questionHandler = new QuestionHandler(this.stateManager);
-    this.optionalQuestionHandler = new OptionalQuestionHandler(this.stateManager);
-    this.responseGenerator = new ResponseGenerator(this.stateManager);
+  constructor() {
+    this.reset();
+    this.ollama = new Ollama();
   }
 
-  async generateResponse(input) {
+  reset() {
+    this.currentState = {
+      questionType: 'initial',
+      collectedInfo: {},
+      currentDependent: null
+    };
+  }
+
+  async getFirstQuestion(userId) {
     try {
-      const state = this.stateManager.getState();
-
-      // Handle confirmation phase
-      if (state.isConfirmationPhase) {
-        return this.handleConfirmation(input);
+      // Get user profile from cache
+      const userProfile = await getCachedUserProfile(userId);
+      if (!userProfile) {
+        throw new Error('User profile not found');
       }
 
-      // Handle optional phase
-      if (state.isOptionalPhase) {
-        const optionalResponse = await this.optionalQuestionHandler.handleOptionalPhase(input);
-        if (optionalResponse) return optionalResponse;
-        return this.responseGenerator.prepareConfirmation();
+      // Get response from LLM
+      const llmResponse = await this.ollama.generate({
+        model: 'phi3:14b',
+        prompt: initialPrompts.initQuestion(userProfile)
+      });
+
+      const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
+
+      // Parse LLM response and extract suggestions
+      let suggestions = [];
+      if (userProfile.dependent_information && userProfile.dependent_information.length > 0) {
+        // Add existing dependents as suggestions
+        suggestions = userProfile.dependent_information.map(dep => `Add activity for ${dep.name}`);
+        suggestions.push('Add a new dependent');
       }
 
-      // Handle current question validation
-      if (state.currentQuestion && input) {
-        const currentQuestion = this.questionHandler.getCurrentQuestion();
-        const validation = await this.validationHandler.validateAnswer(
-          currentQuestion, 
-          input,
-          state.userState.existingChildren
-        );
-        
-        if (validation.isValid) {
-          this.stateManager.markQuestionCompleted(state.currentQuestion, input);
-          this.stateManager.setCurrentQuestion(null);
+      return {
+        answer: responseText,
+        suggestions: suggestions
+      };
 
-          if (validation.selectedChild !== undefined) {
-            this.stateManager.updateSelectedChild(validation.selectedChild);
-            this.questionHandler.updateQuestions();
-          }
-        } else {
-          return this.responseGenerator.generateErrorResponse(currentQuestion, validation.reason);
-        }
-      }
-
-      // Find next question
-      const nextQuestion = this.questionHandler.getNextQuestion();
-
-      // If all current questions are answered, move to optional phase
-      if (!nextQuestion) {
-        this.stateManager.startOptionalPhase();
-        return this.responseGenerator.generateOptionalPhaseIntro();
-      }
-
-      // Ask next question
-      this.stateManager.setCurrentQuestion(nextQuestion.id);
-      return this.questionHandler.formatQuestionResponse(nextQuestion);
     } catch (error) {
-      console.error('Error in generateResponse:', error);
+      console.error('Error in getFirstQuestion:', error);
       throw error;
     }
   }
 
-  async handleConfirmation(input) {
-    const isConfirming = await this.validationHandler.validateConfirmation(input);
+  async handleFirstQuestionResponse(userId, response) {
+    try {
+      const userProfile = await getCachedUserProfile(userId);
+      if (!userProfile) {
+        throw new Error('User profile not found');
+      }
 
-    if (isConfirming) {
-      return this.responseGenerator.generateCompletionResponse();
-    } else {
-      this.reset();
-      return this.getFirstQuestion();
+      // Check if user wants to add activity for existing dependent
+      const existingDependent = userProfile.dependent_information?.find(
+        dep => response.toLowerCase().includes(dep.name.toLowerCase())
+      );
+
+      if (existingDependent) {
+        this.currentState.currentDependent = {
+          name: existingDependent.name,
+          age: existingDependent.age,
+          gender: existingDependent.gender,
+          school: existingDependent.school
+        };
+      }
+
+      // Transition to mandatory questions
+      this.setQuestionType('mandatory');
+      return this.getMandatoryQuestions(userId);
+    } catch (error) {
+      console.error('Error in handleFirstQuestionResponse:', error);
+      throw error;
     }
   }
 
-  reset() {
-    this.stateManager.reset();
-    this.questionHandler = new QuestionHandler(this.stateManager);
+  async getMandatoryQuestions(userId) {
+    try {
+      const userProfile = await getCachedUserProfile(userId);
+      if (!userProfile) {
+        throw new Error('User profile not found');
+      }
+
+      // Create context for mandatory questions
+      const profileContext = {
+        ...userProfile,
+        currentDependent: this.currentState.currentDependent,
+        collectedInfo: this.currentState.collectedInfo
+      };
+
+      const llmResponse = await this.ollama.generate({
+        model: 'phi3:14b',
+        prompt: mandatoryPrompts.mandatoryQuestion(JSON.stringify(profileContext))
+      });
+
+      const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
+
+      return {
+        answer: responseText,
+        suggestions: [] // Can be enhanced with dynamic suggestions based on context
+      };
+    } catch (error) {
+      console.error('Error in getMandatoryQuestions:', error);
+      throw error;
+    }
   }
 
-  getFirstQuestion() {
-    return this.questionHandler.getFirstQuestion();
+  setQuestionType(type) {
+    if (!['initial', 'mandatory', 'optional'].includes(type)) {
+      throw new Error('Invalid question type');
+    }
+    this.currentState.questionType = type;
+  }
+
+  updateCollectedInfo(info) {
+    this.currentState.collectedInfo = {
+      ...this.currentState.collectedInfo,
+      ...info
+    };
   }
 }
 

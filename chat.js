@@ -2,6 +2,9 @@ const chatContainer = document.getElementById('chat-container');
 const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-button');
 const resetButton = document.createElement('button');
+// const { cacheUserProfile } = require('./config/redis'); <--- uncomment this line will make chatbot not showing any msg.
+
+let TEST_USER = "6722bd9dca5566a55b0c31eb"
 
 // Add reset button
 resetButton.id = 'reset-button';
@@ -60,7 +63,10 @@ async function sendMessage() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt: message })
+      body: JSON.stringify({ 
+        prompt: message,
+        userId: TEST_USER
+      })
     });
 
     if (!response.ok) {
@@ -114,7 +120,8 @@ async function resetProfile() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
+      body: JSON.stringify({ userId: TEST_USER })
     });
 
     if (!response.ok) {
@@ -142,7 +149,7 @@ async function resetProfile() {
 
 async function getFirstQuestion() {
   try {
-    const response = await fetch('http://localhost:3000/api/ai/first-question');
+    const response = await fetch(`http://localhost:3000/api/ai/first-question?userId=${TEST_USER}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -175,10 +182,21 @@ async function getUserById(userId) {
 
 async function showInitialGreeting() {
   try {
-    const userId = "6722bd9dca5566a55b0c31eb";
-    const user = await getUserById(userId);
+    console.log('Starting initial greeting...');
+    const user = await getUserById(TEST_USER);
+    console.log('User data received:', user);
+
+    // Cache user profile
+    try {
+      await cacheUserProfile(TEST_USER, user);
+      console.log('User profile cached successfully');
+    } catch (cacheError) {
+      console.warn('Failed to cache user profile:', cacheError);
+      // Continue execution even if caching fails
+    }
+
     const username = user?.name || "there";
-    addMessage(`Hello, ${username}! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.`);
+    addMessage(`Hello, ${username}! I'm your Carpool Assistant. Let me check your profile, and I'll guide you through some questions to understand your carpooling needs.`);
   } catch (error) {
     console.error('Error fetching user:', error);
     addMessage("Hello! I'm your Carpool Assistant. Let's create your carpool profile. I'll guide you through some questions to understand your carpooling needs.");
