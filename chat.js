@@ -58,15 +58,12 @@ async function sendMessage() {
     userInput.value = '';
 
     console.log('Sending message:', message);
-    const response = await fetch('http://localhost:3000/api/ai/generate', {
+    const response = await fetch(`http://localhost:3000/api/ai/generate?userId=${TEST_USER}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
-        prompt: message,
-        userId: TEST_USER
-      })
+      body: JSON.stringify({ prompt: message })
     });
 
     if (!response.ok) {
@@ -147,9 +144,33 @@ async function resetProfile() {
   }
 }
 
+// async function getFirstQuestion() {
+//   try {
+//     const response = await fetch(`http://localhost:3000/api/ai/first-question?userId=${TEST_USER}`);
+//     if (!response.ok) {
+//       throw new Error(`HTTP error! status: ${response.status}`);
+//     }
+//     const data = await response.json();
+//     if (data.response) {
+//       addMessage(data.response.answer);
+//       if (data.response.suggestions) {
+//         addSuggestions(data.response.suggestions);
+//       }
+//     }
+//   } catch (error) {
+//     console.error('Error getting first question:', error);
+//     addMessage(`Error: ${error.message}. Please check the console for more details.`);
+//   }
+// }
+
 async function getFirstQuestion() {
   try {
-    const response = await fetch(`http://localhost:3000/api/ai/first-question?userId=${TEST_USER}`);
+    const response = await fetch(`http://localhost:3000/api/ai/generate?userId=${TEST_USER}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -215,4 +236,5 @@ resetButton.addEventListener('click', resetProfile);
 // Initial greeting and first question
 showInitialGreeting().then(() => {
   getFirstQuestion();
+
 });

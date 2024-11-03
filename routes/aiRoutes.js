@@ -5,14 +5,16 @@ const router = express.Router();
 
 router.post('/generate', async (req, res) => {
     try {
-        const { prompt, userId } = req.body;
+        const { userId } = req.query;
+        const { prompt = null} = req.body;
         console.log('Received prompt:', prompt);
+        console.log('Received user:', userId);
 
-        if (!prompt || !userId) {
-            return res.status(400).json({ error: 'Prompt and userId are required' });
+        if (!userId) {
+            return res.status(400).json({ error: 'userId is required' });
         }
 
-        const response = await generateResponse(prompt, userId);
+        const response = await generateResponse(userId, prompt);
         console.log('Generated response:', response);
         res.json({ response });
     } catch (error) {

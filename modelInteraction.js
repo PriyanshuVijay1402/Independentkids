@@ -1,44 +1,21 @@
 const CarpoolProfileAgent = require('./util/carpoolAgent/CarpoolAgent');
-const { getCachedUserProfile, cacheUserProfile, deleteCachedUserProfile } = require('./config/redis');
+const { deleteCachedUserProfile } = require('./config/redis');
 
-// Create agent instance
-const carpoolAgent = new CarpoolProfileAgent();
+// Map to store agent instances by userId
+const agentInstances = new Map();
 
-// Export interface functions
-async function generateResponse(prompt, userId) {
-  try {
-    // Try to get cached profile
-    const cachedProfile = await getCachedUserProfile(userId);
-    
-    // Generate response with cached profile
-    const response = await carpoolAgent.generateResponse(prompt, cachedProfile);
-    
-    // Cache the updated profile if response contains updates
-    if (response.profile) {
-      await cacheUserProfile(userId, response.profile);
-    }
-    
-    return response;
-  } catch (error) {
-    console.error('Error in generateResponse:', error);
-    throw error;
+// Get or create agent instance for a userId
+function getAgentInstance(userId) {
+  if (!agentInstances.has(userId)) {
+    agentInstances.set(userId, new CarpoolProfileAgent(userId));
   }
-}
-
-async function resetProfile(userId) {
-  try {
-    // Clear cached profile
-    await deleteCachedUserProfile(userId);
-    carpoolAgent.reset();
-  } catch (error) {
-    console.error('Error in resetProfile:', error);
-    throw error;
-  }
+  return agentInstances.get(userId);
 }
 
 async function getFirstQuestion(userId) {
   try {
-    const response = await carpoolAgent.getFirstQuestion(userId);
+    const agent = getAgentInstance(userId);
+    const response = await agent.getFirstQuestion();
     return response;
   } catch (error) {
     console.error('Error in getFirstQuestion:', error);
@@ -46,4 +23,33 @@ async function getFirstQuestion(userId) {
   }
 }
 
-module.exports = { generateResponse, resetProfile, getFirstQuestion };
+async function generateResponse(userId, input = null) {
+  try {
+    const agent = getAgentInstance(userId);
+    const response = await agent.generateResponse(input);
+    return response;
+  } catch (error) {
+    console.error('Error in generateResponse:', error);
+    throw error;
+  }
+}
+
+
+async function resetProfile(userId) {
+  try {
+    await deleteCachedUserProfile(userId);
+    if (agentInstances.has(userId)) {
+      agentInstances.get(userId).reset();
+      agentInstances.delete(userId);
+    }
+  } catch (error) {
+    console.error('Error in resetProfile:', error);
+    throw error;
+  }
+}
+
+module.exports = {
+  getFirstQuestion,
+  generateResponse,
+  resetProfile
+};
