@@ -38,6 +38,10 @@ class StateManager {
     }
   }
 
+  getCurrentPhase(){
+    return this.memory.currentPhase;
+  }
+
   setCurrentQuestion(question) {
     this.memory.currentQuestion = question;
   }

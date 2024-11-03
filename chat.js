@@ -78,6 +78,12 @@ async function sendMessage() {
     if (data.response) {
       console.log('Processing response:', data.response);
 
+      // Always display addition message if it exists
+      if (data.response.message) {
+        console.log('Adding additional msg:', data.response.message);
+        addMessage(data.response.message);
+      }
+
       // Always display the answer if it exists
       if (data.response.answer) {
         console.log('Adding message:', data.response.answer);

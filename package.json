@@ -6,17 +6,21 @@
     "start": "node app.js",
     "server": "nodemon app.js",
     "mongodb": "sudo service mongodb start",
+    "redis": "sudo service redis-server start",
+    "db": "sudo service mongodb start && sudo service redis-server start",
     "dev": "npm run server",
     "seed": "node db/seeders/seed.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.31.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "mongoose": "^8.0.3",
     "ollama": "^0.5.9",
     "redis": "^4.7.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^3.1.7"
   }
 }
