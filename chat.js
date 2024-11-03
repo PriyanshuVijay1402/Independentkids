@@ -2,7 +2,6 @@ const chatContainer = document.getElementById('chat-container');
 const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-button');
 const resetButton = document.createElement('button');
-// const { cacheUserProfile } = require('./config/redis'); <--- uncomment this line will make chatbot not showing any msg.
 
 let TEST_USER = "6722bd9dca5566a55b0c31eb"
 
@@ -63,7 +62,10 @@ async function sendMessage() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt: message })
+      body: JSON.stringify({ 
+        prompt: message,
+        isNewSession: false // Regular messages are not new sessions
+      })
     });
 
     if (!response.ok) {
@@ -132,10 +134,10 @@ async function resetProfile() {
     // Show initial greeting with username
     await showInitialGreeting();
 
-    if (data.firstQuestion) {
-      addMessage(data.firstQuestion.answer);
-      if (data.firstQuestion.suggestions) {
-        addSuggestions(data.firstQuestion.suggestions);
+    if (data.response) {
+      addMessage(data.response.answer);
+      if (data.response.suggestions) {
+        addSuggestions(data.response.suggestions);
       }
     }
   } catch (error) {
@@ -144,32 +146,16 @@ async function resetProfile() {
   }
 }
 
-// async function getFirstQuestion() {
-//   try {
-//     const response = await fetch(`http://localhost:3000/api/ai/first-question?userId=${TEST_USER}`);
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! status: ${response.status}`);
-//     }
-//     const data = await response.json();
-//     if (data.response) {
-//       addMessage(data.response.answer);
-//       if (data.response.suggestions) {
-//         addSuggestions(data.response.suggestions);
-//       }
-//     }
-//   } catch (error) {
-//     console.error('Error getting first question:', error);
-//     addMessage(`Error: ${error.message}. Please check the console for more details.`);
-//   }
-// }
-
 async function getFirstQuestion() {
   try {
     const response = await fetch(`http://localhost:3000/api/ai/generate?userId=${TEST_USER}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
+      body: JSON.stringify({
+        isNewSession: true // Indicate this is a new session
+      })
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -207,15 +193,6 @@ async function showInitialGreeting() {
     const user = await getUserById(TEST_USER);
     console.log('User data received:', user);
 
-    // Cache user profile
-    try {
-      await cacheUserProfile(TEST_USER, user);
-      console.log('User profile cached successfully');
-    } catch (cacheError) {
-      console.warn('Failed to cache user profile:', cacheError);
-      // Continue execution even if caching fails
-    }
-
     const username = user?.name || "there";
     addMessage(`Hello, ${username}! I'm your Carpool Assistant. Let me check your profile, and I'll guide you through some questions to understand your carpooling needs.`);
   } catch (error) {
@@ -224,6 +201,7 @@ async function showInitialGreeting() {
   }
 }
 
+// Add event listeners
 sendButton.addEventListener('click', sendMessage);
 userInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
@@ -236,5 +214,4 @@ resetButton.addEventListener('click', resetProfile);
 // Initial greeting and first question
 showInitialGreeting().then(() => {
   getFirstQuestion();
-
 });

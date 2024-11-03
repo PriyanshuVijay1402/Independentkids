@@ -5,27 +5,23 @@ const { deleteCachedUserProfile } = require('./config/redis');
 const agentInstances = new Map();
 
 // Get or create agent instance for a userId
-function getAgentInstance(userId) {
-  if (!agentInstances.has(userId)) {
+function getAgentInstance(userId, forceNew = false) {
+  // If forceNew is true or instance doesn't exist, create new instance
+  if (forceNew || !agentInstances.has(userId)) {
+    // If there's an existing instance, clean it up first
+    if (agentInstances.has(userId)) {
+      agentInstances.get(userId).reset();
+      agentInstances.delete(userId);
+    }
     agentInstances.set(userId, new CarpoolProfileAgent(userId));
   }
   return agentInstances.get(userId);
 }
 
-async function getFirstQuestion(userId) {
+async function generateResponse(userId, input = null, isNewSession = true) {
   try {
-    const agent = getAgentInstance(userId);
-    const response = await agent.getFirstQuestion();
-    return response;
-  } catch (error) {
-    console.error('Error in getFirstQuestion:', error);
-    throw error;
-  }
-}
-
-async function generateResponse(userId, input = null) {
-  try {
-    const agent = getAgentInstance(userId);
+    // Force new instance on new session (page refresh)
+    const agent = getAgentInstance(userId, isNewSession);
     const response = await agent.generateResponse(input);
     return response;
   } catch (error) {
@@ -33,7 +29,6 @@ async function generateResponse(userId, input = null) {
     throw error;
   }
 }
-
 
 async function resetProfile(userId) {
   try {
@@ -49,7 +44,6 @@ async function resetProfile(userId) {
 }
 
 module.exports = {
-  getFirstQuestion,
   generateResponse,
   resetProfile
 };

@@ -16,37 +16,43 @@ class CarpoolAgent {
     this.ollama = new Ollama();
   }
 
-  async getFirstQuestion() {
-    try {
-      if (!this.stateManager.getProfile()) {
-        await this.stateManager.setUserProfile();
-      }
-
-      const llmResponse = await this.ollama.generate({
-        model: 'phi3:14b',
-        prompt: initialPrompts.initQuestion(this.stateManager.userProfile)
-      });
-
-      const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
-
-      let suggestions = [];
-      if (this.stateManager.userProfile.dependent_information &&
-          this.stateManager.userProfile.dependent_information.length > 0
-      ){
-        suggestions = this.stateManager.userProfile.dependent_information.map(dep => `Add activity for ${dep.name}`);
-        suggestions.push('Add a new dependent');
-      }
-
-      return {
-        answer: responseText,
-        suggestions: suggestions
-      };
-
-    } catch (error) {
-      console.error('Error in getFirstQuestion:', error);
-      throw error;
-    }
+  // Reset the agent state
+  reset() {
+    this.stateManager = new StateManager(this.stateManager.userId);
+    this.initialQuestionHandler = new InitialQuestionHandler(this.stateManager);
   }
+
+  // async getFirstQuestion() {
+  //   try {
+  //     if (!this.stateManager.getProfile()) {
+  //       await this.stateManager.setUserProfile();
+  //     }
+
+  //     const llmResponse = await this.ollama.generate({
+  //       model: 'phi3:14b',
+  //       prompt: initialPrompts.initQuestion(this.stateManager.userProfile)
+  //     });
+
+  //     const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
+
+  //     let suggestions = [];
+  //     if (this.stateManager.userProfile.dependent_information &&
+  //         this.stateManager.userProfile.dependent_information.length > 0
+  //     ){
+  //       suggestions = this.stateManager.userProfile.dependent_information.map(dep => `Add activity for ${dep.name}`);
+  //       suggestions.push('Add a new dependent');
+  //     }
+
+  //     return {
+  //       answer: responseText,
+  //       suggestions: suggestions
+  //     };
+
+  //   } catch (error) {
+  //     console.error('Error in getFirstQuestion:', error);
+  //     throw error;
+  //   }
+  // }
 
   async generateResponse(input) {
     try {
@@ -56,7 +62,6 @@ class CarpoolAgent {
       // Handle Initial Phase
       if (currentPhase === Phase.INITIAL) {
         const llmResponse = await this.initialQuestionHandler.handleInitialPhase(input);
-        console.debug(llmResponse)
         if (llmResponse) return llmResponse;
       }
     } catch (error) {

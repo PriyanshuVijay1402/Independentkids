@@ -4,7 +4,7 @@ const ValidationHandler = require('./ValidationHandler');
 const initialPrompts = require('../prompts/initial_question_prompt');
 const Phase = require('../vars/stateEnum');
 
-class OptionalQuestionHandler {
+class InitialQuestionHandler {
   constructor(stateManager) {
     this.stateManager = stateManager;
     this.validationHandler = new ValidationHandler(this.stateManager);
@@ -49,29 +49,42 @@ class OptionalQuestionHandler {
   async handleInitialPhase(input) {
     try {
       const state = this.stateManager.getState();
-      let validationResponse = null;
       console.debug(state);
 
-      // If there's no current question, ask initial question based on user's profile
-      if (!state.currentQuestion) {
+      // If there's no current question or no input, generate initial question
+      if (!state.currentQuestion || !input) {
         const response = await this.generateInitialQuestion();
         return response;
-      } else if (input) {
-        validationResponse = await this.validationHandler.validateInitResponse(input)
       }
+
+      // Only validate if we have input
+      const validationResponse = await this.validationHandler.validateInitResponse(input);
 
       if (validationResponse.isValid) {
         // move to mandatory phase
+        const nextQuestion = "That's great! Let's move on to some questions for the activiy."
         this.stateManager.setCurrentPhase(Phase.MANDATORY);
-        return null;
-      } else {
-        return validationResponse.reason
+        this.stateManager.setCurrentQuestion(nextQuestion);
+        this.stateManager.setCurrentSuggestion([]);
+        console.debug(this.stateManager.getState());
+        return {
+          answer: nextQuestion,
+          suggestion: []
+        }
       }
+      return this.generateErrorResponse(validationResponse.reason);
     } catch (error) {
       console.error('Error in handleInitialPhase:', error);
       throw error;
     }
   }
+
+  generateErrorResponse(validationReason) {
+    return {
+      answer: `${validationReason}😅 Let's try again.`,
+      suggestions: this.stateManager.memory.currentSuggestion
+    };
+  }
 }
 
-module.exports = OptionalQuestionHandler;
+module.exports = InitialQuestionHandler;
