@@ -25,6 +25,32 @@ function addMessage(message, isUser = false) {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
+function addHints(hintText, hintsList) {
+  const hintsContainer = document.createElement('div');
+  hintsContainer.classList.add('hints-container');
+
+  // Create and append the hint text
+  const hintTextElement = document.createElement('span');
+  hintTextElement.classList.add('hint-text');
+  hintTextElement.textContent = !hintsList || hintsList.length === 0 ? hintText : hintText + ': ';
+  hintsContainer.appendChild(hintTextElement);
+
+  // Create and append each hint as an unclickable button
+  if (hintsList) {
+    hintsList.forEach((hint, index) => {
+      const hintButton = document.createElement('button');
+      hintButton.classList.add('hint-button');
+      hintButton.textContent = `${hint}`;
+      hintButton.disabled = true;
+      hintsContainer.appendChild(hintButton);
+    });
+  }
+
+  // Append the hints container to the chat container
+  chatContainer.appendChild(hintsContainer);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
 function addSuggestions(suggestions) {
   const suggestionsContainer = document.createElement('div');
   suggestionsContainer.classList.add('suggestions-container');
@@ -78,16 +104,19 @@ async function sendMessage() {
     if (data.response) {
       console.log('Processing response:', data.response);
 
-      // Always display addition message if it exists
-      if (data.response.message) {
-        console.log('Adding additional msg:', data.response.message);
-        addMessage(data.response.message);
-      }
-
       // Always display the answer if it exists
       if (data.response.answer) {
         console.log('Adding message:', data.response.answer);
         addMessage(data.response.answer);
+      }
+
+      // Always display hintMsg and hints if it exists
+      if (data.response.hintMsg) {
+        console.log('Adding hint message:', data.response.message);
+        if (data.response.hints && data.response.hints.length > 0) {
+          console.log('Adding hints:', data.response.hints);
+        }
+        addHints(data.response.hintMsg, data.response.hints);
       }
 
       // Add suggestions if they exist

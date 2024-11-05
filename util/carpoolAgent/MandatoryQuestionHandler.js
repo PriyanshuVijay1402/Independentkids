@@ -1,9 +1,10 @@
 const ValidationHandler = require('./ValidationHandler');
-const { claude } = require('../claude-util');
+const { claude, extractJSON } = require('../utils.js');
 // const { Ollama } = require('ollama');
-const mandatoryPrompts = require('../prompts/mandatory_question_prompt');
-// const Phase = require('../vars/stateEnum');
-const Model = require('../vars/claudeEnum');
+
+const basicPrompts = require('../prompts/basic_question_prompt.js');
+const Phase = require('../vars/stateEnum');
+const Type = require('../vars/questionTypeEnum.js');
 
 class MandatoryQuestionHandler {
   constructor(stateManager) {
@@ -12,32 +13,30 @@ class MandatoryQuestionHandler {
     // this.ollama = new Ollama();
   }
 
-  async generateMandatoryQuestion() {
+  async generateMandatoryQuestion(input = null) {
     try {
-      const prompt = mandatoryPrompts.mandatoryQuestion(
-        this.stateManager.getCurrentDependent()
-      );
-      console.debug(prompt);
-      const llmResponse = await claude(prompt);
-      // const llmResponse = await this.ollama.generate({
-      //   model: 'phi3:14b',
-      //   prompt: initialPrompts.initQuestion(this.stateManager.userProfile)
-      // });
-      console.debug(llmResponse)
-      const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
-      let suggestions = [];
+      const state = this.stateManager.getState();
+      // handle the initial dependent check
+      if (state.currentType === Type.BASIC){
+        const prompt = basicPrompts.basicQuestion(
+          this.stateManager.memory.currentDependent.basic,
+          input
+        );
 
-      // to do, update in memory userprofile
-      // update current question
-      this.stateManager.setCurrentQuestion(responseText)
-      this.stateManager.setCurrentSuggestion(suggestions)
+        // console.debug(prompt);
+        const llmResponse = await claude(prompt);
+        // const llmResponse = await this.ollama.generate({
+        //   model: 'phi3:14b',
+        //   prompt: initialPrompts.initQuestion(this.stateManager.userProfile)
+        // });
+        // console.debug(llmResponse)
+        // const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
+        const responseText = extractJSON(llmResponse);
+        this.stateManager.setCurrentQuestion(responseText.answer)
+        this.stateManager.setCurrentSuggestion(responseText.hint)
 
-      return {
-        answer: responseText,
-        suggestions: suggestions,
-        message: null
-      };
-
+        return responseText
+      }
     } catch (error) {
       console.error('Error in generateMandatoryQuestion:', error);
       throw error;
@@ -48,37 +47,58 @@ class MandatoryQuestionHandler {
     try {
       const state = this.stateManager.getState();
       console.debug(state);
+      let response;
 
-      let msg;
-      // If there's no current question or no input, generate initial question
-      if (!state.currentQuestion || !input) {
-        if (!this.stateManager.getCurrentDependent()) {
-          msg = "Of course! Let's start with some basic information for your new dependent!"
+      // If current type is NULL, check dependent status and provide initial mandatory question
+      if (!state.currentType ) {
+        // set question type to BASIC, ask first question for new dependent
+        if (!this.stateManager.getCurrentDependent().basic.name) {
+          response = {
+            answer: "Of course! Let's start with some basic information for your new dependent!",
+            hintMsg: "You can provide me information such as",
+            hints: ["name", "gender", "age", "grade"]
+          };
+          this.stateManager.memory.currentType = Type.BASIC;
+        }
+        // set question type to ACTIVITY, ask first question for user selected dependent
+        else {
+          response = {
+            answer: `That's great! Let's work on a new activity for ${this.stateManager.getCurrentDependent().basic.name}`,
+            hintMsg: "Please provide me some details about this activity",
+            hints: ["name", "address", "time window"]
+          };
+          this.stateManager.memory.currentType = Type.ACTIVITY;
+        }
+        // remember current question
+        this.stateManager.setCurrentQuestion(response.answer);
+        return response;
+      }
+
+      // handle BASIC questions
+      if (state.currentType === Type.BASIC )
+      {
+        response = await this.generateMandatoryQuestion(input);
+        this.stateManager.memory.currentDependent.basic = response.basic;
+        if (!response.isComplete) {
+          return {
+            answer: response.answer,
+            hintMsg: response.hint
+          };
         } else {
-          msg = `That's great! Let's work on a new activity for ${this.stateManager.getCurrentDependent().name}`
+          return {
+            answer: response.answer,
+            hintMsg: response.hint,
+            suggestions: ["I have some updates", "I'm good for next step"]
+          }
+          // if user say YES, update memory.currentDependent.basic, proceed to SCHOOL type
+          // if user say NO, ask user what need to be changed.? and setCurrentQuestion
         }
       }
-      const response = await this.generateMandatoryQuestion(input);
-      if (msg) {
-        response.message = msg
-      };
-      return response;
 
-      // Only validate if we have input
-      // const validationResponse = await this.validationHandler.validateMandarotyResponse(input);
-
-      // if (validationResponse.isValid) {
-      //   // move to mandatory phase
-      //   this.stateManager.setCurrentPhase(Phase.MANDATORY);
-      //   this.stateManager.setCurrentQuestion(null);
-      //   this.stateManager.setCurrentSuggestion([]);
-      //   this.stateMamager.setCurrentDependent(validationResponse.dependent);
-      //   console.debug(this.stateManager.getState());
-      //   return null
-      // }
-      // return this.generateErrorResponse(validationResponse.reason);
+      return this.generateErrorResponse(validationResponse.reason);
     } catch (error) {
-      console.error('Error in handleInitialPhase:', error);
+      const state = this.stateManager.getState();
+      console.error(`Error in handleMandatoryPhase:`, error);
       throw error;
     }
   }

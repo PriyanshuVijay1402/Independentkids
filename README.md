@@ -11,33 +11,49 @@ The assistant guides users through a series of questions to understand their car
 - Interactive chat interface
 - AI-powered conversation
 - MongoDB database integration
+- Redis state management
 - User profile management
 - Personalized greeting with user's name
 - Suggestion buttons for quick responses
+- Intelligent question handling and validation
+- State-based conversation flow
 
 ## Tech Stack
 
 - Frontend: HTML, CSS, JavaScript
 - Backend: Node.js, Express
 - Database: MongoDB
-- AI: llama3.2:3b model
+- Cache: Redis
+- AI: ~~llama3.2:3b model~~ Claude Haiku
 
 ## Project Structure
 
 ```
 ├── config/
-│   └── db.js           # MongoDB configuration
+│   ├── db.js           # MongoDB configuration
+│   └── redis.js        # Redis configuration
 ├── db/
 │   ├── models/         # Database models
 │   └── seeders/        # Database seeders
 ├── routes/
 │   ├── aiRoutes.js     # AI-related routes
-│   └── userRoutes.js   # User-related routes
+│   ├── userRoutes.js   # User-related routes
+│   └── routes.js       # Main route configuration
+├── util/
+│   ├── carpoolAgent/   # Carpool agent components
+│   │   ├── CarpoolAgent.js
+│   │   ├── InitialQuestionHandler.js
+│   │   ├── MandatoryQuestionHandler.js
+│   │   ├── StateManager.js
+│   │   └── ValidationHandler.js
+│   ├── prompts/        # AI prompt templates
+│   ├── vars/           # Enums and templates
+│   └── utils.js        # Utility functions
 ├── public/
 │   └── images/         # Static images
 ├── app.js              # Express application setup
-├── chat.js            # Chat interface logic
-└── routes.js          # Main route configuration
+├── chat.js             # Chat interface logic
+└── middleware.js       # Application middleware
 ```
 
 ## Setup
@@ -47,17 +63,22 @@ The assistant guides users through a series of questions to understand their car
 npm install
 ```
 
-2. Start MongoDB service:
+2. Start MongoDB and Redis Service:
 ```bash
-sudo service mongodb start
+sudo npm run db
 ```
 
-3. Seed the database:
+3. Start Ollama service (optional, no longer required since we move onto Claude API):
+```bash
+ollama serve
+```
+
+4. Seed the database:
 ```bash
 npm run seed
 ```
 
-4. Start the development server:
+5. Start the development server:
 ```bash
 npm run dev
 ```
@@ -68,7 +89,6 @@ The application will be available at http://localhost:3000
 
 ### AI Routes
 - POST `/api/ai/generate` - Generate AI response
-- GET `/api/ai/first-question` - Get initial question
 - POST `/api/ai/reset` - Reset user profile
 
 ### User Routes
@@ -79,6 +99,9 @@ The application will be available at http://localhost:3000
 - DELETE `/api/users/:id` - Delete user
 
 ## Development
-Use `ollama serve` to start ollama, note that llama3.2:3b model will be needed
-Use `sudo service mongodb start` to start MongoDB
-Use `npm run dev` to start both services simultaneously.
+- `ollama serve` is no longer required since dev move onto Claude. If you'd like to use local LLM model, you can uncomment ollama related part to test.
+- a `Claude` API Key is needed. Please provide a key in .env file at root level
+- Use `sudo service mongodb start` to start MongoDB
+- Use `sudo service redis-server start` to start Redis
+- Use `npm run db` will do above two command all at once :)
+- Use `npm run dev` to start the application server👍

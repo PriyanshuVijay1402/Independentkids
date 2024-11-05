@@ -1,5 +1,6 @@
 const ValidationHandler = require('./ValidationHandler');
-const { claude } = require('../claude-util');
+const { claude, extractJSON } = require('../utils');
+const { basicInfoTemplate } = require('../vars/dependentTemplate');
 // const { Ollama } = require('ollama');
 const initialPrompts = require('../prompts/initial_question_prompt');
 const Phase = require('../vars/stateEnum');
@@ -23,7 +24,8 @@ class InitialQuestionHandler {
       //   prompt: initialPrompts.initQuestion(this.stateManager.userProfile)
       // });
       console.debug(llmResponse);
-      const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
+      // const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
+      const responseText = extractJSON(llmResponse);
 
       let suggestions = [];
       if (this.stateManager.userProfile.dependent_information &&
@@ -47,38 +49,6 @@ class InitialQuestionHandler {
     }
   }
 
-  async generateMandatoryQuestion() {
-    try {
-      const prompt = mandatoryPrompts.initQuestion(
-        this.stateManager.userProfile,
-        this.stateManager.memory.setCurrentDependent
-      );
-      const llmResponse = await claude(prompt);
-      // const llmResponse = await this.ollama.generate({
-      //   model: 'phi3:14b',
-      //   prompt: initialPrompts.initQuestion(this.stateManager.userProfile)
-      // });
-      console.debug(llmResponse);
-      const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
-      let suggestions = [];
-
-      // to do, update in memory userprofile
-      // update current question
-      this.stateManager.setCurrentQuestion(responseText)
-      this.stateManager.setCurrentSuggestion(suggestions)
-
-      return {
-        answer: responseText,
-        suggestions: suggestions,
-        message: null
-      };
-
-    } catch (error) {
-      console.error('Error in getFirstQuestion:', error);
-      throw error;
-    }
-  }
-
   async handleInitialPhase(input) {
     try {
       const state = this.stateManager.getState();
@@ -94,18 +64,23 @@ class InitialQuestionHandler {
       const validationResponse = await this.validationHandler.validateInitResponse(input);
 
       if (validationResponse.isValid) {
-        // move to mandatory phase
+        let basicInfo;
+        if (validationResponse.dependent === 'new dependent') {
+          basicInfo = { ...basicInfoTemplate };
+        } else {
+          const dependent = this.stateManager.userProfile.dependent_information.find(dependent => dependent.name === validationResponse.dependent);
+          const { name, gender, age, grade } = dependent;
+          basicInfo = { name, gender, age, grade };
+        }
+
+        // Update just the basic property in the existing currentDependent structure
+        this.stateManager.memory.currentDependent.basic = basicInfo;
         this.stateManager.setCurrentPhase(Phase.MANDATORY);
         this.stateManager.setCurrentQuestion(null);
         this.stateManager.setCurrentSuggestion([]);
-        if (validationResponse.dependent !== 'new dependent'){
-          const dependent = this.stateManager.userProfile.dependent_information.find(dependent => dependent.name === validationResponse.dependent);
-          this.stateManager.setCurrentDependent(dependent);
-        }else{
-          this.stateManager.setCurrentDependent(null);
-        }
+
         console.debug(this.stateManager.getState());
-        return null
+        return null;
       }
       return this.generateErrorResponse(validationResponse.reason);
     } catch (error) {

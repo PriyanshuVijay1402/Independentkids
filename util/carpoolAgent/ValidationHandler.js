@@ -1,5 +1,5 @@
 const initialValidatePrompts = require('../prompts/initial_validation_prompt');
-const { claude } = require('../claude-util');
+const { claude } = require('../utils');
 // const { Ollama } = require('ollama');
 const Phase = require('../vars/stateEnum');
 const Model = require('../vars/claudeEnum');

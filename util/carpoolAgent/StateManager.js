@@ -7,7 +7,14 @@ class StateManager {
     this.userProfile = null;
     this.memory = {
       currentPhase: Phase.INITIAL,
-      currentDependent: null,
+      currentDependent: {
+        basic: null,
+        school: null,
+        activity: null,
+        preference: null,
+        schedule: []
+      },
+      currentType: null,
       currentQuestion: null,
       currentSuggestion: null
     };
