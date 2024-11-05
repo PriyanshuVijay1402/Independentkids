@@ -2,6 +2,7 @@ const ValidationHandler = require('./ValidationHandler');
 const { claude, extractJSON } = require('../utils.js');
 
 const basicPrompts = require('../prompts/basic_question_prompt.js');
+const {keywordsForNextStep} = require('../vars/vars.js');
 const Phase = require('../vars/stateEnum');
 const Type = require('../vars/questionTypeEnum.js');
 
@@ -24,7 +25,7 @@ class MandatoryQuestionHandler {
         const llmResponse = await claude(prompt);
         const responseText = extractJSON(llmResponse);
         this.stateManager.setCurrentQuestion(responseText.answer)
-        this.stateManager.setCurrentSuggestion(responseText.hint)
+        this.stateManager.setCurrentSuggestion(responseText.suggestion)
 
         return responseText
       }
@@ -69,27 +70,45 @@ class MandatoryQuestionHandler {
       // handle BASIC questions
       if (state.currentType === Type.BASIC )
       {
+        if (this.stateManager.memory.nextTypeReady && keywordsForNextStep.some(keyword => input.toLowerCase().includes(keyword))) {
+          const nextQuestion = `Now, please provide some information about ${this.stateManager.getCurrentDependent().basic.name}'s school`
+          this.stateManager.memory.currentType = Type.SCHOOL;
+          this.stateManager.setCurrentQuestion(nextQuestion);
+          this.stateManager.setCurrentSuggestion([])
+
+          console.debug("--- info before move on to school type  ---");
+          console.debug(this.stateManager.memory)
+
+          return {
+            answer: nextQuestion,
+            hintMsg: `Feel free to skip, but some of those may help you finding carpool among ${this.stateManager.getCurrentDependent().basic.name}'s classmates`,
+            hints: ["name", "address", "school time"]
+          };
+        }
+
         response = await this.generateMandatoryQuestion(input);
+        console.debug(response)
         this.stateManager.memory.currentDependent.basic = response.basic;
         if (!response.isComplete) {
-          console.debug("--- Dependent before isComplete return ---")
-          console.debug(this.stateManager.memory.currentDependent);
           return {
             answer: response.answer,
             hintMsg: response.hint
           };
         } else {
-          console.debug("--- Dependent before isComplete return ---")
-          console.debug(this.stateManager.memory.currentDependent);
+          this.stateManager.memory.nextTypeReady = true;
           return {
-            answer: response.answer + "👍 We can move onto dependept's school information, or feel free to tell me if there's anything you'd like to update.",
+            answer: response.answer + "👍 We can move onto dependept's school information, or feel free to tell me if there's anything you'd like to update",
             hintMsg: response.hint,
             info: response.basic,
             suggestions: ["I'm good for next step"]
-          }
-          // if user say YES, update memory.currentDependent.basic, proceed to SCHOOL type
-          // if user say NO, ask user what need to be changed.? and setCurrentQuestion
+          };
         }
+      }
+
+      // handle BASIC questions
+      if (state.currentType === Type.SCHOOL ){
+        //TO DO: add logic to handle school information extraction & validation
+        // need to adjust the prompt
       }
 
       return this.generateErrorResponse(validationResponse.reason);

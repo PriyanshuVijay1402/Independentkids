@@ -15,6 +15,7 @@ class StateManager {
         schedule: []
       },
       currentType: null,
+      nextTypeReady: false,
       currentQuestion: null,
       currentSuggestion: null
     };
