@@ -25,6 +25,39 @@ function addMessage(message, isUser = false) {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
+function addInfo(info) {
+  const infoElement = document.createElement('div');
+  infoElement.classList.add('message');
+  infoElement.classList.add('assistant-info');
+
+  const infoContent = document.createElement('div');
+  infoContent.classList.add('message-content');
+
+  // Create a pre element to display the data
+  const jsonElement = document.createElement('pre');
+  jsonElement.classList.add('json-content');
+  
+  // Handle both string and object types
+  if (typeof info === 'string') {
+    try {
+      // Try to parse if it's a JSON string
+      const jsonData = JSON.parse(info);
+      jsonElement.textContent = JSON.stringify(jsonData, null, 2);
+    } catch (error) {
+      // If parsing fails, display as plain text
+      jsonElement.textContent = info;
+    }
+  } else {
+    // If it's already an object, stringify it
+    jsonElement.textContent = JSON.stringify(info, null, 2);
+  }
+
+  infoContent.appendChild(jsonElement);
+  infoElement.appendChild(infoContent);
+  chatContainer.appendChild(infoElement);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
 function addHints(hintText, hintsList) {
   const hintsContainer = document.createElement('div');
   hintsContainer.classList.add('hints-container');
@@ -32,7 +65,7 @@ function addHints(hintText, hintsList) {
   // Create and append the hint text
   const hintTextElement = document.createElement('span');
   hintTextElement.classList.add('hint-text');
-  hintTextElement.textContent = !hintsList || hintsList.length === 0 ? hintText : hintText + ': ';
+  hintTextElement.textContent = !hintsList || hintsList.length === 0 ? `Hint: ${hintText}` : `Hint: ${hintText}`;
   hintsContainer.appendChild(hintTextElement);
 
   // Create and append each hint as an unclickable button
@@ -108,6 +141,12 @@ async function sendMessage() {
       if (data.response.answer) {
         console.log('Adding message:', data.response.answer);
         addMessage(data.response.answer);
+      }
+
+      // Always display the info if it exists
+      if (data.response.info) {
+        console.log('Adding info:', data.response.info);
+        addInfo(data.response.info);
       }
 
       // Always display hintMsg and hints if it exists

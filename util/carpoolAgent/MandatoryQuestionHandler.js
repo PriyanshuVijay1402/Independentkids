@@ -1,6 +1,5 @@
 const ValidationHandler = require('./ValidationHandler');
 const { claude, extractJSON } = require('../utils.js');
-// const { Ollama } = require('ollama');
 
 const basicPrompts = require('../prompts/basic_question_prompt.js');
 const Phase = require('../vars/stateEnum');
@@ -10,7 +9,6 @@ class MandatoryQuestionHandler {
   constructor(stateManager) {
     this.stateManager = stateManager;
     this.validationHandler = new ValidationHandler(this.stateManager);
-    // this.ollama = new Ollama();
   }
 
   async generateMandatoryQuestion(input = null) {
@@ -23,14 +21,7 @@ class MandatoryQuestionHandler {
           input
         );
 
-        // console.debug(prompt);
         const llmResponse = await claude(prompt);
-        // const llmResponse = await this.ollama.generate({
-        //   model: 'phi3:14b',
-        //   prompt: initialPrompts.initQuestion(this.stateManager.userProfile)
-        // });
-        // console.debug(llmResponse)
-        // const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
         const responseText = extractJSON(llmResponse);
         this.stateManager.setCurrentQuestion(responseText.answer)
         this.stateManager.setCurrentSuggestion(responseText.hint)
@@ -46,6 +37,7 @@ class MandatoryQuestionHandler {
   async handleMandatoryPhase(input) {
     try {
       const state = this.stateManager.getState();
+      console.debug("--- init state ---")
       console.debug(state);
       let response;
 
@@ -80,15 +72,20 @@ class MandatoryQuestionHandler {
         response = await this.generateMandatoryQuestion(input);
         this.stateManager.memory.currentDependent.basic = response.basic;
         if (!response.isComplete) {
+          console.debug("--- Dependent before isComplete return ---")
+          console.debug(this.stateManager.memory.currentDependent);
           return {
             answer: response.answer,
             hintMsg: response.hint
           };
         } else {
+          console.debug("--- Dependent before isComplete return ---")
+          console.debug(this.stateManager.memory.currentDependent);
           return {
-            answer: response.answer,
+            answer: response.answer + "👍 We can move onto dependept's school information, or feel free to tell me if there's anything you'd like to update.",
             hintMsg: response.hint,
-            suggestions: ["I have some updates", "I'm good for next step"]
+            info: response.basic,
+            suggestions: ["I'm good for next step"]
           }
           // if user say YES, update memory.currentDependent.basic, proceed to SCHOOL type
           // if user say NO, ask user what need to be changed.? and setCurrentQuestion

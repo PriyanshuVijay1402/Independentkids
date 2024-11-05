@@ -1,7 +1,7 @@
 const ValidationHandler = require('./ValidationHandler');
 const { claude, extractJSON } = require('../utils');
 const { basicInfoTemplate } = require('../vars/dependentTemplate');
-// const { Ollama } = require('ollama');
+
 const initialPrompts = require('../prompts/initial_question_prompt');
 const Phase = require('../vars/stateEnum');
 
@@ -9,7 +9,6 @@ class InitialQuestionHandler {
   constructor(stateManager) {
     this.stateManager = stateManager;
     this.validationHandler = new ValidationHandler(this.stateManager);
-    // this.ollama = new Ollama();
   }
 
   async generateInitialQuestion() {
@@ -19,11 +18,6 @@ class InitialQuestionHandler {
       }
       const prompt = initialPrompts.initQuestion(this.stateManager.userProfile);
       const llmResponse = await claude(prompt);
-      // const llmResponse = await this.ollama.generate({
-      //   model: 'phi3:14b',
-      //   prompt: initialPrompts.initQuestion(this.stateManager.userProfile)
-      // });
-      console.debug(llmResponse);
       // const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
       const responseText = extractJSON(llmResponse);
 
