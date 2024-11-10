@@ -156,7 +156,7 @@ class MandatoryQuestionHandler {
       if (state.currentType === Type.ACTIVITY )
         {
           if (this.stateManager.memory.nextTypeReady && keywordsForNextStep.some(keyword => input.toLowerCase().includes(keyword))) {
-            const nextQuestion = `Now, you can provide a detailed schedule for the ${this.stateManager.memory.activity.name}`
+            const nextQuestion = `Now, you can provide a detailed schedule for the ${this.stateManager.memory.currentDependent.activity.name}`
             this.stateManager.memory.currentType = Type.SCHEDULE;
             this.stateManager.setCurrentQuestion(nextQuestion);
             this.stateManager.setCurrentSuggestion([])

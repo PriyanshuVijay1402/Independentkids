@@ -33,28 +33,32 @@ function extractJSON(input) {
     return input;
   }
 
-  // Convert input to string
-  const text = String(input);
+  // Convert input to string and trim whitespace
+  const text = String(input).trim();
 
   // Try to parse the entire text first
   try {
     return JSON.parse(text);
   } catch (e) {
-    // If that fails, try to find the first valid JSON object
-    const matches = text.match(/\{(?:[^{}]|(?:\{[^{}]*\}))*\}/g);
+    // If that fails, try to find JSON objects in the text
+    // This regex looks for objects that may contain nested objects
+    const matches = text.match(/\{(?:[^{}]|\{[^{}]*\})*\}/g);
     if (matches) {
       for (const match of matches) {
         try {
           const parsed = JSON.parse(match);
-          // Return the first successfully parsed JSON
-          return parsed;
-        } catch (e) {
+          // Verify the parsed result is actually an object
+          if (typeof parsed === 'object' && parsed !== null) {
+            return parsed;
+          }
+        } catch (parseError) {
           continue;
         }
       }
     }
     
-    console.warn('Failed to parse JSON content:', e);
+    // If no valid JSON found, log a warning and return the original text
+    console.warn('No valid JSON found in content:', text);
     return text;
   }
 }

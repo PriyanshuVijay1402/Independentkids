@@ -18,7 +18,8 @@ class InitialQuestionHandler {
       }
       const prompt = initialPrompts.initQuestion(this.stateManager.userProfile);
       const llmResponse = await claude(prompt);
-      // const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
+      console.debug(llmResponse);
+      //const responseText = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
       const responseText = extractJSON(llmResponse);
 
       let suggestions = [];
