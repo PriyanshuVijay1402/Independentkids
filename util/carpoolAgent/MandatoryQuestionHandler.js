@@ -2,7 +2,8 @@ const ValidationHandler = require('./ValidationHandler');
 const { claude, extractJSON } = require('../utils.js');
 
 const basicPrompts = require('../prompts/basic_question_prompt.js');
-const {keywordsForNextStep} = require('../vars/vars.js');
+const schoolPrompts = require('../prompts/school_question_prompt.js');
+const {keywordsForNextStep, keywordsForSkip} = require('../vars/vars.js');
 const Phase = require('../vars/stateEnum');
 const Type = require('../vars/questionTypeEnum.js');
 
@@ -15,20 +16,26 @@ class MandatoryQuestionHandler {
   async generateMandatoryQuestion(input = null) {
     try {
       const state = this.stateManager.getState();
+      let prompt;
       // handle the initial dependent check
       if (state.currentType === Type.BASIC){
-        const prompt = basicPrompts.basicQuestion(
+        prompt = basicPrompts.basicQuestion(
           this.stateManager.memory.currentDependent.basic,
           input
         );
-
-        const llmResponse = await claude(prompt);
-        const responseText = extractJSON(llmResponse);
-        this.stateManager.setCurrentQuestion(responseText.answer)
-        this.stateManager.setCurrentSuggestion(responseText.suggestion)
-
-        return responseText
+      } else if (state.currentType === Type.SCHOOL){
+        prompt = schoolPrompts.schoolQuestion(
+          this.stateManager.memory.currentDependent.school,
+          input
+        );
       }
+
+      const llmResponse = await claude(prompt);
+      const responseText = extractJSON(llmResponse);
+      this.stateManager.setCurrentQuestion(responseText.answer)
+      this.stateManager.setCurrentSuggestion(responseText.suggestion)
+
+      return responseText
     } catch (error) {
       console.error('Error in generateMandatoryQuestion:', error);
       throw error;
@@ -97,20 +104,45 @@ class MandatoryQuestionHandler {
         } else {
           this.stateManager.memory.nextTypeReady = true;
           return {
-            answer: response.answer + "👍 We can move onto dependept's school information, or feel free to tell me if there's anything you'd like to update",
+            answer: response.answer + "👍 We can move onto dependent's school information, or feel free to tell me if there's anything you'd like to update",
             hintMsg: response.hint,
             info: response.basic,
-            suggestions: ["I'm good for next step"]
+            suggestions: ["next step"]
           };
         }
       }
 
-      // handle BASIC questions
-      if (state.currentType === Type.SCHOOL ){
-        //TO DO: add logic to handle school information extraction & validation
-        // need to adjust the prompt
-      }
+      // handle SCHOOL questions
+      if (state.currentType === Type.SCHOOL )
+        {
+          if ([...keywordsForNextStep, ...keywordsForSkip].some(keyword => input.toLowerCase().includes(keyword))) {
+            const nextQuestion = `Now, let's work on ${this.stateManager.getCurrentDependent().basic.name}'s new activity`
+            this.stateManager.memory.currentType = Type.ACTIVITY;
+            this.stateManager.setCurrentQuestion(nextQuestion);
+            this.stateManager.setCurrentSuggestion([])
 
+            console.debug("--- info before move on to activity type  ---");
+            console.debug(this.stateManager.memory)
+
+            return {
+              answer: nextQuestion,
+              hintMsg: "Following activity information is required for carpool matching",
+              hints: ["activity name", "address", "activity time window", "sharing preference"]
+            };
+          }
+
+          response = await this.generateMandatoryQuestion(input);
+          console.debug(response)
+          this.stateManager.memory.currentDependent.school = response.school;
+            // this.stateManager.memory.nextTypeReady = true;
+          const text = `👍 We can work on the new activity for ${this.stateManager.getCurrentDependent().basic.name}, or feel free to update school information`;
+          return {
+            answer: response.answer ? response.answer + text : text ,
+            hintMsg: response.hint ?  response.hintMsg : null,
+            info: response.school,
+            suggestions: ["next step"]
+          };
+        }
       return this.generateErrorResponse(validationResponse.reason);
     } catch (error) {
       const state = this.stateManager.getState();
