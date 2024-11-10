@@ -27,34 +27,37 @@ async function claude(
   }
 }
 
-
 function extractJSON(input) {
-  // Convert input to string if it's not already
-  const text = typeof input === 'object' ? 
-    (input.response || JSON.stringify(input)) : 
-    String(input);
-
-  // Try to find JSON object pattern between curly braces
-  const jsonMatch = text.match(/\{(?:[^{}]|(?:\{[^{}]*\}))*\}/);
-  if (jsonMatch) {
-    try {
-      // Try to parse the matched content
-      return JSON.parse(jsonMatch[0]);
-    } catch (e) {
-      console.warn('Failed to parse matched JSON content:', e);
-    }
+  // If input is already an object, return it directly
+  if (typeof input === 'object' && input !== null) {
+    return input;
   }
 
-  // If no valid JSON found, try to parse the entire text
+  // Convert input to string
+  const text = String(input);
+
+  // Try to parse the entire text first
   try {
     return JSON.parse(text);
   } catch (e) {
-    console.warn('Failed to parse entire text as JSON:', e);
-    // Return the original text if all parsing attempts fail
+    // If that fails, try to find the first valid JSON object
+    const matches = text.match(/\{(?:[^{}]|(?:\{[^{}]*\}))*\}/g);
+    if (matches) {
+      for (const match of matches) {
+        try {
+          const parsed = JSON.parse(match);
+          // Return the first successfully parsed JSON
+          return parsed;
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    
+    console.warn('Failed to parse JSON content:', e);
     return text;
   }
 }
-
 
 module.exports = {
   claude,
