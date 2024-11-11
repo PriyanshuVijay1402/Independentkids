@@ -1,6 +1,5 @@
 const initialValidatePrompts = require('../prompts/initial_validation_prompt');
-const { claude } = require('../utils');
-// const { Ollama } = require('ollama');
+const { claude, extractJSON } = require('../utils');
 const Phase = require('../vars/stateEnum');
 const Model = require('../vars/claudeEnum');
 
@@ -18,15 +17,8 @@ class ValidationHandler {
       };
       const prompt = initialValidatePrompts.initValidation(this.stateManager.userProfile, context);
       const llmResponse = await claude(prompt);
-      // const llmResponse = await this.ollama.generate({
-      //   model: 'phi3:14b',
-      //   prompt: initialValidatePrompts.initValidation(this.stateManager.userProfile, context)
-      // });
-      // console.debug(llmResponse)
-
-      const validationResponse = typeof llmResponse === 'object' ? llmResponse.response : String(llmResponse);
-      console.debug(validationResponse)
-      return JSON.parse(validationResponse);
+      const validationResponse = extractJSON(llmResponse);
+      return validationResponse;
     } catch (error) {
       console.error('Error in validateInitResponse:', error);
       throw error;
