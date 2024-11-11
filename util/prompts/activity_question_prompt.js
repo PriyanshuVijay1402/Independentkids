@@ -13,8 +13,9 @@ PROFILE REQUIREMENTS:
   * start_time: string (in format "H:MM AM/PM")
   * end_time: string (in format "H:MM AM/PM")
   * sharing_preferences: object containing:
-    - willing_to_share_rides: boolean
+    - willing_to_share_rides: boolean (defaults to false if not provided)
     - sharing_type: string ("split" | "rotation" | null)
+    - For sharing preferences, maintain existing willing_to_share_rides value if present
 
 TASK:
 1. Extract existing activity information from profileContext
@@ -26,12 +27,22 @@ TASK:
    - Extract address components if provided (street, city, state, country)
    - Extract time information if provided (start and end times)
    - Convert any provided time formats to consistent HH:MM format (24-hour)
-   - Extract sharing preferences if mentioned
+   - For ride sharing preferences:
+     * ONLY set willing_to_share_rides to true if input EXPLICITLY contains phrases indicating desire to share rides
+       such as: "want to share rides", "interested in carpooling", "can share rides", "looking to carpool"
+     * Do NOT infer sharing preference from context or implicit statements
+     * If willing_to_share_rides is already true in profileContext, maintain it unless explicitly changed
+     * Extract sharing_type only if explicitly specified as "split" or "rotation"
 
 3. Update the activity data:
    - Keep existing values from profileContext for any fields not mentioned in input
    - Only update fields that are explicitly provided in the input
    - Do not overwrite existing data with null values unless explicitly cleared in input
+   - For sharing preferences:
+     * ONLY update willing_to_share_rides if user explicitly mentions sharing/carpooling
+     * Keep existing willing_to_share_rides value if no explicit sharing preference in input
+     * Update sharing_type only if explicitly provided as "split" or "rotation"
+     * If willing_to_share_rides is true but sharing_type missing, include hint
 
 4. Return ONLY a JSON response with no additional text
 
@@ -47,9 +58,9 @@ VALIDATION RULES:
   * Must be in format "HH:MM"
   * end_time must be after start_time
 - Sharing preferences validation:
-  * willing_to_share_rides defaults to false if not provided
-  * sharing_type must be "split" or "rotation" if willing_to_share_rides is true
+  * sharing_type must be "null" or "split" or "rotation" if willing_to_share_rides is true
   * sharing_type must be null if willing_to_share_rides is false
+  * If willing_to_share_rides is true but sharing_type is missing, include hint
 
 RESPONSE FORMAT (STRICT JSON, NO ADDITIONAL TEXT):
 {
@@ -100,30 +111,77 @@ EXAMPLES:
   "isComplete": true
 }
 
-2. Incomplete activity:
+2. Incomplete activity with sharing interest:
 {
-  "answer": "Please provide the complete address for Ballet class",
+  "answer": "I've noted your interest in ride sharing. Please specify your preferred sharing type (split or rotation)",
   "activity": {
     "name": "Ballet",
     "address": {
-      "street": null,
+      "street": "123 Dance Ave",
       "city": "Anytown",
       "state": "TX",
       "country": null
     },
     "time_window": {
       "start_time": "13:00",
-      "end_time": null,
+      "end_time": "14:30",
+    },
+    "sharing_preferences": {
+      "willing_to_share_rides": true,
+      "sharing_type": null
+    }
+  },
+  "hint": "Please specify your preferred sharing type: 'split' (share driving costs) or 'rotation' (take turns driving)",
+  "isComplete": false
+}
+
+3. Input with NO sharing preference mentioned:
+{
+  "answer": "Activity information recorded for Soccer practice",
+  "activity": {
+    "name": "Soccer",
+    "address": {
+      "street": "789 Elm St",
+      "city": "Anytown",
+      "state": "OK",
+      "country": null
+    },
+    "time_window": {
+      "start_time": "14:00",
+      "end_time": "15:30",
     },
     "sharing_preferences": {
       "willing_to_share_rides": false,
       "sharing_type": null
     }
   },
-  "hint": "A complete address (street, city, state) and time window are required",
+  "hint": null,
+  "isComplete": true
+}
+
+4. Input with EXPLICIT sharing interest:
+{
+  "answer": "I've noted your interest in ride sharing. Please specify your preferred sharing type (split or rotation)",
+  "activity": {
+    "name": "Ballet",
+    "address": {
+      "street": "123 Dance Ave",
+      "city": "Anytown",
+      "state": "TX",
+      "country": null
+    },
+    "time_window": {
+      "start_time": "13:00",
+      "end_time": "14:30",
+    },
+    "sharing_preferences": {
+      "willing_to_share_rides": true,
+      "sharing_type": null
+    }
+  },
+  "hint": "Please specify your preferred sharing type: 'split' (share driving costs) or 'rotation' (take turns driving)",
   "isComplete": false
 }`
   }
 };
-
 module.exports = prompts;
