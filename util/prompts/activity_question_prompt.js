@@ -17,24 +17,32 @@ PROFILE REQUIREMENTS:
     - sharing_type: string ("split" | "rotation" | null)
 
 TASK:
-1. Extract ALL activity information from user input: ${input}
-   - Extract activity name
-   - Extract address components (street, city, state, country)
-   - Extract time information (start and end times)
-   - Convert time formats to consistent HH:MM format (24-hour)
+1. Extract existing activity information from profileContext
+   - Use all existing values as base data
+   - If a field doesn't exist in profileContext, set it to null
+
+2. Extract activity information from user input: ${input}
+   - Extract activity name if provided
+   - Extract address components if provided (street, city, state, country)
+   - Extract time information if provided (start and end times)
+   - Convert any provided time formats to consistent HH:MM format (24-hour)
    - Extract sharing preferences if mentioned
 
-2. Compare with existing profile and update accordingly
+3. Update the activity data:
+   - Keep existing values from profileContext for any fields not mentioned in input
+   - Only update fields that are explicitly provided in the input
+   - Do not overwrite existing data with null values unless explicitly cleared in input
 
-3. Return ONLY a JSON response with no additional text
+4. Return ONLY a JSON response with no additional text
 
 VALIDATION RULES:
 - Activity name: Must be non-empty string
 - Address validation:
-  * street: Must be non-empty string
-  * city: Must be non-empty string
-  * state: Must be non-empty string
-  * country: can be null if not provided
+  * street: REQUIRED - Must be non-empty string
+  * city: REQUIRED - Must be non-empty string
+  * state: REQUIRED - Must be non-empty string
+  * country: Optional - can be null
+  * Activity CANNOT be marked as isComplete if street, city, or state is null
 - Time validation:
   * Must be in format "HH:MM"
   * end_time must be after start_time
@@ -64,7 +72,7 @@ RESPONSE FORMAT (STRICT JSON, NO ADDITIONAL TEXT):
     }
   },
   "hint": string | null,  // Hint about missing or invalid information
-  "isComplete": boolean  // true only if all required fields are valid
+  "isComplete": boolean  // true only if all required fields are valid, including complete address
 }
 
 EXAMPLES:
@@ -112,7 +120,7 @@ EXAMPLES:
       "sharing_type": null
     }
   },
-  "hint": "A complete time window is required to coordinate carpools",
+  "hint": "A complete address (street, city, state) and time window are required",
   "isComplete": false
 }`
   }
