@@ -5,6 +5,8 @@ const basicPrompts = require('../prompts/basic_question_prompt.js');
 const schoolPrompts = require('../prompts/school_question_prompt.js');
 const activityPrompts = require('../prompts/activity_question_prompt.js');
 const prefPrompts = require('../prompts/pref_question_prompt.js');
+const schedulePrompts = require('../prompts/schedule_question_prompt.js');
+
 const {keywordsForNextStep, keywordsForSkip} = require('../vars/vars.js');
 const Phase = require('../vars/stateEnum');
 const Type = require('../vars/questionTypeEnum.js');
@@ -37,7 +39,13 @@ class MandatoryQuestionHandler {
         );
       } else if (state.currentType === Type.PREF){
         prompt = prefPrompts.prefQuestion(
-          this.stateManager.memory.setCurrentQuestion,
+          this.stateManager.memory.currentQuestion,
+          input
+        );
+      } else if (state.currentType === Type.SCHEDULE){
+        prompt = schedulePrompts.scheduleQuestion(
+          this.stateManager.memory.currentDependent.schedule,
+          this.stateManager.memory.currentDependent.preference,
           input
         );
       }
@@ -216,8 +224,8 @@ class MandatoryQuestionHandler {
 
             return {
               answer: nextQuestion,
-              hintMsg: `On a weekly basis, please specify the days on which this activity occurs. You can then further specify your pickup and drop-off availability for each occurrence. Examples`,
-              hints: ["I can provide drop off between 4:30pm to 4:45pm.", "I cannot pick up on Friday."],
+              hintMsg: `On a weekly basis, please specify the days on which this activity occurs. Examples`,
+              hints: ["Monday, Wednesday, Friday", "M, W, F"],
               suggestions: []
             };
           }
@@ -228,8 +236,7 @@ class MandatoryQuestionHandler {
           if (!response.isComplete) {
             return {
               answer: response.answer,
-              hintMsg: response.hint,
-              suggestions:response.suggestion
+              hintMsg: response.hint
             };
           } else {
             this.stateManager.memory.nextTypeReady = true;
@@ -237,6 +244,38 @@ class MandatoryQuestionHandler {
               answer: response.answer + `👍 We are ready for next setp, or feel free update your sharing preference if you changed your mind`,
               hintMsg: response.hint,
               info: response.sharing_preferences,
+              suggestions: ["next step"]
+            };
+          }
+        }
+
+      // handle SCHEDULE questions
+      if (state.currentType === Type.SCHEDULE )
+        {
+          if (this.stateManager.memory.nextTypeReady && keywordsForNextStep.some(keyword => input.toLowerCase().includes(keyword))) {
+            this.stateManager.setCurrentPhase(Phase.OPTIONAL);
+            this.stateManager.setCurrentQuestion(null);
+            this.stateManager.setCurrentSuggestion([]);
+
+            console.debug("--- info before move on to OPTIONAL phase  ---");
+            console.debug(JSON.stringify(this.stateManager, null, 2));
+            return null;
+          }
+
+          response = await this.generateMandatoryQuestion(input);
+          console.debug(response)
+          this.stateManager.memory.currentDependent.schedule = response.schedule;
+          if (!response.isComplete) {
+            return {
+              answer: response.answer,
+              hintMsg: response.hint
+            };
+          } else {
+            this.stateManager.memory.nextTypeReady = true;
+            return {
+              answer: response.answer + `👍 We are ready for next setp, or feel free to make any updates`,
+              hintMsg: response.hint,
+              info: response.schedule,
               suggestions: ["next step"]
             };
           }

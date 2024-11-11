@@ -28,6 +28,12 @@ class CarpoolAgent {
         const llmResponse = await this.mandatoryQuestionHandler.handleMandatoryPhase(input);
         if (llmResponse) return llmResponse;
       }
+
+      if (this.stateManager.getCurrentPhase() === Phase.OPTIONAL) {
+        // const llmResponse = await this.optionalQuestionHandler.handleOptionalPhase(input);
+        // if (llmResponse) return llmResponse;
+        console.debug("Hitting Optional Phase in Carpool Agent");
+      }
     } catch (error) {
       console.error('Error in generateResponse:', error);
       throw error;
