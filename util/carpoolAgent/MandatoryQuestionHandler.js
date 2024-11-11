@@ -53,7 +53,7 @@ class MandatoryQuestionHandler {
     try {
       const state = this.stateManager.getState();
       console.debug("--- init state ---")
-      console.debug(state);
+      console.debug(JSON.stringify(state, null, 2));
       let response;
 
       // If current type is NULL, check dependent status and provide initial mandatory question
@@ -161,13 +161,13 @@ class MandatoryQuestionHandler {
             this.stateManager.setCurrentQuestion(nextQuestion);
             this.stateManager.setCurrentSuggestion([])
 
-            console.debug("--- info before move on to school type  ---");
+            console.debug("--- info before move on to schedule type  ---");
             console.debug(this.stateManager.memory)
 
             return {
               answer: nextQuestion,
-              hintMsg: `On a weekly basis, please specify the days on which the ${this.stateManager.memory.currentDependent.activity.name} occurs. You can then further specify your pickup and drop-off availability for each occurrence. Examples`,
-              hints: ["I can take other kids for drop off between 4:30pm to 4:45pm.", "I cannot pick up on Friday."],
+              hintMsg: `On a weekly basis, please specify the days on which this activity occurs. You can then further specify your pickup and drop-off availability for each occurrence. Examples`,
+              hints: ["I can provide drop off between 4:30pm to 4:45pm.", "I cannot pick up on Friday."],
               suggestions: []
             };
           }
@@ -178,6 +178,7 @@ class MandatoryQuestionHandler {
           if (!response.isComplete) {
             return {
               answer: response.answer,
+              info: response.activity,
               hintMsg: response.hint
             };
           } else {
