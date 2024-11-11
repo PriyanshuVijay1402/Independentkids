@@ -4,6 +4,7 @@ const { claude, extractJSON } = require('../utils.js');
 const basicPrompts = require('../prompts/basic_question_prompt.js');
 const schoolPrompts = require('../prompts/school_question_prompt.js');
 const activityPrompts = require('../prompts/activity_question_prompt.js');
+const prefPrompts = require('../prompts/pref_question_prompt.js');
 const {keywordsForNextStep, keywordsForSkip} = require('../vars/vars.js');
 const Phase = require('../vars/stateEnum');
 const Type = require('../vars/questionTypeEnum.js');
@@ -32,6 +33,11 @@ class MandatoryQuestionHandler {
       } else if (state.currentType === Type.ACTIVITY){
         prompt = activityPrompts.activityQuestion(
           this.stateManager.memory.currentDependent.activity,
+          input
+        );
+      } else if (state.currentType === Type.PREF){
+        prompt = prefPrompts.prefQuestion(
+          this.stateManager.memory.setCurrentQuestion,
           input
         );
       }
@@ -69,12 +75,16 @@ class MandatoryQuestionHandler {
         }
         // set question type to ACTIVITY, ask first question for user selected dependent
         else {
+          const dependentName = this.stateManager.getCurrentDependent().basic.name;
           response = {
-            answer: `That's great! Let's work on a new activity for ${this.stateManager.getCurrentDependent().basic.name}.`,
+            answer: `That's great! Let's work on a new activity for ${dependentName}.`,
             hintMsg: "Please provide me some require information about this activity, if you're open to sharing your ride with others for this activity, please mention it here.",
             hints: ["activity name", "address", "activity time window", "sharing preference"]
           };
           this.stateManager.memory.currentType = Type.ACTIVITY;
+          // handle existing school info
+          const schoolInfo = this.stateManager.userProfile.dependent_information.find(dependent => dependent.name === dependentName).school_info;
+          this.stateManager.memory.currentDependent.school = schoolInfo
         }
         // remember current question
         this.stateManager.setCurrentQuestion(response.answer);
@@ -156,6 +166,46 @@ class MandatoryQuestionHandler {
       if (state.currentType === Type.ACTIVITY )
         {
           if (this.stateManager.memory.nextTypeReady && keywordsForNextStep.some(keyword => input.toLowerCase().includes(keyword))) {
+            const nextQuestion = `Would you like to share rides for ${this.stateManager.memory.currentDependent.activity.name}?`
+            this.stateManager.memory.currentType = Type.PREF;
+            this.stateManager.setCurrentQuestion(nextQuestion);
+            this.stateManager.setCurrentSuggestion(["Yes", "No"])
+
+            console.debug("--- info before move on to preference type  ---");
+            console.debug(JSON.stringify(this.stateManager.memory, null, 2));
+
+            return {
+              answer: nextQuestion,
+              hintMsg: "By sharing rides for an activity, you'll appear as a potential driver in the matching results. You can further customize your availability in later step. 😊Don't worry, you'll still be able to find a carpool even if you choose not to share.",
+              hints: [],
+              suggestions: ["Yes", "No"]
+            };
+          }
+
+          response = await this.generateMandatoryQuestion(input);
+          console.debug(response)
+          this.stateManager.memory.currentDependent.activity = response.activity;
+          if (!response.isComplete) {
+            return {
+              answer: response.answer,
+              info: response.activity,
+              hintMsg: response.hint
+            };
+          } else {
+            this.stateManager.memory.nextTypeReady = true;
+            return {
+              answer: response.answer + `👍 You are good for next step, or feel free to update ${this.stateManager.memory.currentDependent.activity.name}`,
+              hintMsg: response.hint,
+              info: response.activity,
+              suggestions: ["next step"]
+            };
+          }
+        }
+
+      // handle PREF questions
+      if (state.currentType === Type.PREF )
+        {
+          if (this.stateManager.memory.nextTypeReady && keywordsForNextStep.some(keyword => input.toLowerCase().includes(keyword))) {
             const nextQuestion = `Now, you can provide a detailed schedule for the ${this.stateManager.memory.currentDependent.activity.name}`
             this.stateManager.memory.currentType = Type.SCHEDULE;
             this.stateManager.setCurrentQuestion(nextQuestion);
@@ -174,19 +224,19 @@ class MandatoryQuestionHandler {
 
           response = await this.generateMandatoryQuestion(input);
           console.debug(response)
-          this.stateManager.memory.currentDependent.activity = response.activity;
+          this.stateManager.memory.currentDependent.preference = response.sharing_preferences;
           if (!response.isComplete) {
             return {
               answer: response.answer,
-              info: response.activity,
-              hintMsg: response.hint
+              hintMsg: response.hint,
+              suggestions:response.suggestion
             };
           } else {
             this.stateManager.memory.nextTypeReady = true;
             return {
-              answer: response.answer + `👍 We can move onto schedule details, or feel free to tell me if there's anything you'd like to update on ${this.stateManager.memory.currentDependent.activity.name}`,
+              answer: response.answer + `👍 We are ready for next setp, or feel free update your sharing preference if you changed your mind`,
               hintMsg: response.hint,
-              info: response.activity,
+              info: response.sharing_preferences,
               suggestions: ["next step"]
             };
           }
