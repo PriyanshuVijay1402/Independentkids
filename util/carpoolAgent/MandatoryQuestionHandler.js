@@ -212,7 +212,7 @@ class MandatoryQuestionHandler {
             this.stateManager.setCurrentSuggestion([])
 
             console.debug("--- info before move on to schedule type  ---");
-            console.debug(this.stateManager.memory)
+            console.debug(JSON.stringify(this.stateManager.memory, null, 2));
 
             return {
               answer: nextQuestion,
