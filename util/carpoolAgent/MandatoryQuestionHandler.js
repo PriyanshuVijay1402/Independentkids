@@ -39,6 +39,7 @@ class MandatoryQuestionHandler {
         );
       } else if (state.currentType === Type.PREF){
         prompt = prefPrompts.prefQuestion(
+          this.stateManager.memory.currentDependent.preference,
           this.stateManager.memory.currentQuestion,
           input
         );
