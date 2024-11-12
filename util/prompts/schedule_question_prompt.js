@@ -26,6 +26,8 @@ When sharing_type is "split":
 3. When transport availability is provided WITH specific days:
    * Only update the specified days with the provided availability
    * Do not modify other days' availability
+   * Each day can have different transport availability
+   * Example: "dropoff 4:30-4:45pm on Mon, pickup 6-6:10pm on Tue" creates separate entries for Monday and Tuesday
 
 4. When a user explicitly states they are NOT available on a day:
    * Include that day with transport_availability: null
@@ -132,7 +134,35 @@ Input: "I can dropoff between 4:30pm to 4:45pm, and pickup between 6pm to 6:10pm
   "isComplete": true
 }
 
-3. Transport availability provided for specific days:
+3. Different transport availability for different days:
+Input: "I can dropoff between 4:30pm to 4:45pm on Mon, and pickup between 6pm to 6:10pm on Tue"
+{
+  "answer": "Set Monday's dropoff and Tuesday's pickup times",
+  "schedule": [
+    {
+      "day_of_week": 1,
+      "transport_availability": {
+        "dropoff_window": {
+          "start_time": "16:30",
+          "end_time": "16:45"
+        }
+      }
+    },
+    {
+      "day_of_week": 2,
+      "transport_availability": {
+        "pickup_window": {
+          "start_time": "18:00",
+          "end_time": "18:10"
+        }
+      }
+    }
+  ],
+  "hint": "",
+  "isComplete": true
+}
+
+4. Transport availability provided for specific days:
 Input: "On Monday I can pickup 3-4pm"
 {
   "answer": "Updated Monday's transport availability. Wednesday still needs transport times.",
@@ -152,7 +182,7 @@ Input: "On Monday I can pickup 3-4pm"
   "isComplete": false
 }
 
-4. Invalid input:
+5. Invalid input:
 {
   "answer": "I need to know which days of the week the activity takes place",
   "schedule": [],
