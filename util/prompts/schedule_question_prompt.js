@@ -13,28 +13,34 @@ Given the user input "${input}", create a schedule list where each entry represe
 
 RULES:
 1. Day Parsing:
-   - Convert day names or abbreviations to numbers (1-7, where 1=Monday)
+   - Convert day names or abbreviations to numbers (1-7, where 1=Monday, 2=Tuesday, 3=wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday)
    - Accept full names (Monday), abbreviations (Mon), or single letters (M)
    - Handle combinations (Monday and Wednesday, Mon & Wed, M/W)
    - Each day should only appear once
 
-2. Transport Availability:
+2. Day Validation:
+   - When user provides availability, only process days that exist in the current schedule context
+   - When user indicates availability is for "all days" or "everyday", apply it ONLY to days already in the schedule context
+   - DO NOT add new days to the schedule that aren't already present in the schedule context
+   - If user mentions days that don't match the schedule, set isComplete to false and include error in hintMsg
+
+3. Transport Availability:
    - If willing_to_share_rides is false: create entries with only day_of_week
    - If sharing_type is "rotation" or null: create entries with only day_of_week
    - If sharing_type is "split": MUST include transport_availability object for EACH day
-   - If sharing_type is "split" and transport_availability is missing for any day: mark isComplete as false
+   - When user explicitly states they are NOT available on a specific day: set transport_availability to null for that day
+   - When user doesn't specify availability for a day: mark isComplete as false and request it
    - Pickup/dropoff windows must use "HH:MM" format
-   - For split sharing: ONLY set transport_availability to null if user explicitly states they cannot provide transport on that day
    - When a day has both pickup and dropoff, include both in the same transport_availability object
 
-3. Schedule Creation:
+4. Schedule Creation:
    - If no valid days found: return empty schedule with hint message
    - If days found: create schedule entries based on sharing preferences
    - Each entry must follow the exact JSON structure shown in examples
    - For split sharing: if transport availability is not specified, set isComplete false and request it
-   - For split sharing: do not assume unavailability - always ask for explicit confirmation
+   - For split sharing: only set transport_availability to null when user explicitly states unavailability
 
-Output must be valid JSON with this structure, show steps and reason as well: 
+RESPONSE FORMAT (STRICT JSON, NO ADDITIONAL TEXT):
 {
   "answer": "Brief explanation of what was processed",
   "schedule": [
@@ -69,29 +75,20 @@ Example outputs:
   "isComplete": true
 }
 
-2. Split sharing schedule with complete transport availability:
+2. Split sharing with explicit unavailability:
 {
-  "answer": "Schedule set with transport availability",
+  "answer": "Schedule set with transport availability. Monday marked as unavailable",
   "schedule": [
     {
       "day_of_week": 1,
+      "transport_availability": null
+    },
+    {
+      "day_of_week": 3,
       "transport_availability": {
         "dropoff_window": {
           "start_time": "08:30",
           "end_time": "08:45"
-        }
-      }
-    },
-    {
-      "day_of_week": 5,
-      "transport_availability": {
-        "dropoff_window": {
-          "start_time": "16:30",
-          "end_time": "16:45"
-        },
-        "pickup_window": {
-          "start_time": "18:00",
-          "end_time": "18:10"
         }
       }
     }
@@ -100,7 +97,42 @@ Example outputs:
   "isComplete": true
 }
 
-3. Split sharing schedule without transport availability:
+3. Split sharing applying to existing schedule days:
+{
+  "answer": "Applied transport availability to all scheduled days",
+  "schedule": [
+    {
+      "day_of_week": 2,
+      "transport_availability": {
+        "pickup_window": {
+          "start_time": "15:00",
+          "end_time": "15:30"
+        }
+      }
+    },
+    {
+      "day_of_week": 4,
+      "transport_availability": {
+        "pickup_window": {
+          "start_time": "15:00",
+          "end_time": "15:30"
+        }
+      }
+    }
+  ],
+  "hintMsg": "",
+  "isComplete": true
+}
+
+4. Split sharing schedule with invalid days:
+{
+  "answer": "Some specified days don't match the activity schedule",
+  "schedule": [],
+  "hintMsg": "The availability you provided includes days that aren't in the activity schedule. Please provide availability only for scheduled activity days.",
+  "isComplete": false
+}
+
+5. Split sharing schedule without transport availability:
 {
   "answer": "Days identified but need transport availability information",
   "schedule": [
@@ -115,7 +147,7 @@ Example outputs:
   "isComplete": false
 }
 
-4. Invalid input:
+6. Invalid input:
 {
   "answer": "I need to know which days of the week the activity takes place",
   "schedule": [],
