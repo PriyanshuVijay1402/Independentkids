@@ -13,14 +13,15 @@ Given the user input "${input}", create a schedule list where each entry represe
 
 CRITICAL REQUIREMENTS FOR SPLIT SHARING:
 When sharing_type is "split":
-- transport_availability should ONLY be included when EXPLICITLY provided in the user input
+- When a user explicitly states they are NOT available on a day, include that day with transport_availability: null
+- For days where they ARE available, transport_availability should ONLY be included when EXPLICITLY provided in the user input
 - Do NOT create or infer transport_availability if not explicitly given
 - If transport availability is required but not provided:
   * Set isComplete to false
   * Include a hint message requesting transport availability for specific days
   * Include the days in the schedule output without transport_availability
 - Do NOT create a schedule with only day_of_week information
-- Do NOT set isComplete to true unless ALL days have transport_availability
+- Do NOT set isComplete to true unless ALL days have transport_availability defined (either with times or explicitly set to null)
 
 RULES:
 1. Day Parsing:
@@ -28,6 +29,7 @@ RULES:
    - Accept full names (Monday), abbreviations (Mon), or single letters (M)
    - Handle combinations (Monday and Wednesday, Mon & Wed, M/W)
    - Each day should only appear once
+   - When user explicitly states they are not available on a day, include it with transport_availability: null
 
 2. Transport Availability Rules:
    - If willing_to_share_rides is false: create entries with only day_of_week
@@ -35,11 +37,12 @@ RULES:
    - If sharing_type is "split": MUST follow CRITICAL REQUIREMENTS above
    - ONLY include transport_availability when times are EXPLICITLY provided in user input
    - Pickup/dropoff windows must use "HH:MM" format
+   - Set transport_availability to null when user explicitly states they are not available
 
 3. Schedule Creation:
    - If no valid days found: return empty schedule with hint message
    - If days found: create schedule entries following above rules strictly
-   - For split sharing: NEVER create transport_availability unless explicitly provided
+   - For split sharing: NEVER create transport_availability unless explicitly provided or explicitly set to null
 
 Output must be valid JSON with this structure:
 {
@@ -76,25 +79,24 @@ Example outputs:
   "isComplete": true
 }
 
-2. Split sharing WITH explicitly provided transport availability:
+2. Split sharing WITH explicitly provided transport availability and unavailability:
 {
-  "answer": "Schedule set with transport availability as provided",
+  "answer": "Schedule set with transport availability as provided. Monday marked as unavailable.",
   "schedule": [
     {
       "day_of_week": 1,
-      "transport_availability": {
-        "dropoff_window": {
-          "start_time": "15:30",
-          "end_time": "15:50"
-        }
-      }
+      "transport_availability": null
     },
     {
       "day_of_week": 3,
       "transport_availability": {
         "pickup_window": {
-          "start_time": "17:30",
-          "end_time": "17:45"
+          "start_time": "18:00",
+          "end_time": "18:10"
+        },
+        "dropoff_window": {
+          "start_time": "16:30",
+          "end_time": "16:45"
         }
       }
     }
