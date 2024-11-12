@@ -1,5 +1,5 @@
 const ValidationHandler = require('./ValidationHandler');
-const { claude, extractJSON } = require('../utils.js');
+const { claude, extractJSON, extractDeepJSON } = require('../utils.js');
 
 const basicPrompts = require('../prompts/basic_question_prompt.js');
 const schoolPrompts = require('../prompts/school_question_prompt.js');
@@ -53,7 +53,7 @@ class MandatoryQuestionHandler {
 
       const llmResponse = await claude(prompt);
       console.debug(llmResponse);
-      const responseText = extractJSON(llmResponse);
+      const responseText = state.currentType === Type.SCHEDULE? extractDeepJSON(llmResponse) : extractJSON(llmResponse);
       this.stateManager.setCurrentQuestion(responseText.answer)
       this.stateManager.setCurrentSuggestion(responseText.suggestion)
 
@@ -264,6 +264,7 @@ class MandatoryQuestionHandler {
           }
 
           response = await this.generateMandatoryQuestion(input);
+          console.debug("*****")
           console.debug(response)
           this.stateManager.memory.currentDependent.schedule = response.schedule;
           if (!response.isComplete) {

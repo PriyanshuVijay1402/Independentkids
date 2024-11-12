@@ -59,7 +59,7 @@ Output must be valid JSON with this structure:
       }
     }
   ],
-  "hintMsg": "Help message if needed",
+  "hint": "Help message if needed",
   "isComplete": boolean
 }
 
@@ -72,7 +72,7 @@ Example outputs:
     {"day_of_week": 1},
     {"day_of_week": 3}
   ],
-  "hintMsg": "",
+  "hint": "",
   "isComplete": true
 }
 
@@ -99,7 +99,7 @@ Example outputs:
       }
     }
   ],
-  "hintMsg": "",
+  "hint": "",
   "isComplete": true
 }
 
@@ -110,7 +110,7 @@ Example outputs:
     {"day_of_week": 1},
     {"day_of_week": 3}
   ],
-  "hintMsg": "Please provide transport availability (pickup/dropoff times) for Monday and Wednesday as required for split sharing",
+  "hint": "Please provide transport availability (pickup/dropoff times) for Monday and Wednesday as required for split sharing",
   "isComplete": false
 }
 
@@ -129,7 +129,7 @@ Example outputs:
     },
     {"day_of_week": 3}
   ],
-  "hintMsg": "Please provide transport availability (pickup/dropoff times) for Wednesday as required for split sharing",
+  "hint": "Please provide transport availability (pickup/dropoff times) for Wednesday as required for split sharing",
   "isComplete": false
 }
 
@@ -137,7 +137,7 @@ Example outputs:
 {
   "answer": "I need to know which days of the week the activity takes place",
   "schedule": [],
-  "hintMsg": "Please specify which day(s) of the week the activity occurs (e.g., Monday and Wednesday, or Mon/Wed)",
+  "hint": "Please specify which day(s) of the week the activity occurs (e.g., Monday and Wednesday, or Mon/Wed)",
   "isComplete": false
 }`
   }
