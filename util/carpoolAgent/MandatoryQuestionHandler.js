@@ -255,11 +255,14 @@ class MandatoryQuestionHandler {
         {
           if (this.stateManager.memory.nextTypeReady && keywordsForNextStep.some(keyword => input.toLowerCase().includes(keyword))) {
             this.stateManager.setCurrentPhase(Phase.OPTIONAL);
+            // reset other memory
             this.stateManager.setCurrentQuestion(null);
             this.stateManager.setCurrentSuggestion([]);
+            this.stateManager.memory.currentType = null;
+            this.stateManager.memory.nextTypeReady = false;
 
             console.debug("--- info before move on to OPTIONAL phase  ---");
-            console.debug(JSON.stringify(this.stateManager, null, 2));
+            console.debug(JSON.stringify(this.stateManager.memory, null, 2));
             return null;
           }
 
@@ -275,7 +278,7 @@ class MandatoryQuestionHandler {
           } else {
             this.stateManager.memory.nextTypeReady = true;
             return {
-              answer: response.answer + `👍 We are ready for next setp, or feel free to make any updates`,
+              answer: response.answer + `👍 We can move onto some additional questions that may enhance your carpooling experience, or feel free to make any updates`,
               hintMsg: response.hint,
               info: response.schedule,
               suggestions: ["next step"]

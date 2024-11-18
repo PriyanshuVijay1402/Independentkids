@@ -12,12 +12,14 @@ class StateManager {
         school: null,
         activity: null,
         preference: null,
-        schedule: []
+        schedule: [],
+        additional_info: {}
       },
       currentType: null,
       nextTypeReady: false,
       currentQuestion: null,
-      currentSuggestion: null
+      currentSuggestion: null,
+      prevQuestions: []
     };
     userId && this.setUserProfile();
   }
