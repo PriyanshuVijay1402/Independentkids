@@ -91,26 +91,55 @@ function extractDeepJSON(input) {
   }
 }
 
-function assembleDependent(dependentData) {
-  return {
-    name: dependentData.basic.name,
-    gender: dependentData.basic.gender,
-    age: dependentData.basic.age,
-    grade: dependentData.basic.grade,
-    school_info: {
-      name: dependentData.school.name,
-      address: dependentData.school.address,
-      time_window: dependentData.school.time_window
-    },
-    activities: [{
-      name: dependentData.activity.name,
-      address: dependentData.activity.address,
-      time_window: dependentData.activity.time_window,
-      sharing_preferences: dependentData.preference,
-      schedule: dependentData.schedule || []
-    }],
-    additional_info: dependentData.additional_info
-  };
+function assembleDependent(stateManager) {
+  try {
+    const dependentData = stateManager.getCurrentDependent();
+    const profile = stateManager.userProfile
+    console.debug(profile)
+    const existingDependent = profile.dependent_information?.find(d => d.name === dependentData.basic.name);
+    console.debug(existingDependent)
+
+    // If dependent exists in cache, append new activity
+    if (existingDependent) {
+      const newActivity = {
+        name: dependentData.activity.name,
+        address: dependentData.activity.address,
+        time_window: dependentData.activity.time_window,
+        sharing_preferences: dependentData.preference,
+        schedule: dependentData.schedule || []
+      };
+
+      // Return existing dependent data with new activity appended and additional_info updated
+      return {
+        ...existingDependent,
+        activities: [...existingDependent.activities, newActivity],
+        additional_info: dependentData.additional_info
+      };
+    }
+
+    // If no cached data found or dependent doesn't exist in cache, create new dependent
+    return {
+      name: dependentData.basic.name,
+      gender: dependentData.basic.gender,
+      age: dependentData.basic.age,
+      grade: dependentData.basic.grade,
+      school_info: {
+        name: dependentData.school.name,
+        address: dependentData.school.address,
+        time_window: dependentData.school.time_window
+      },
+      activities: [{
+        name: dependentData.activity.name,
+        address: dependentData.activity.address,
+        time_window: dependentData.activity.time_window,
+        sharing_preferences: dependentData.preference,
+        schedule: dependentData.schedule || []
+      }],
+      additional_info: dependentData.additional_info
+    };
+  } catch (error) {
+    console.error('Error in assembleDependent:', error);
+  }
 }
 
 module.exports = {

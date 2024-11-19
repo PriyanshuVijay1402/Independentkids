@@ -39,7 +39,7 @@ class CarpoolAgent {
       if (this.stateManager.getCurrentPhase() === Phase.CONFIRMATION) {
         return {
           answer: `👍 We are all set.`,
-          info: assembleDependent(this.stateManager.getCurrentDependent()),
+          info: await assembleDependent(this.stateManager),
           isProfileComplete: true
         };
       }
