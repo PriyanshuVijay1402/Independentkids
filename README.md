@@ -11,7 +11,7 @@ The assistant guides users through a series of questions to understand their car
 ## Features
 
 - Interactive chat interface
-- AI-powered conversation
+- AI-powered conversation with Claude
 - MongoDB database integration
 - Redis state management
 - User profile management
@@ -19,6 +19,7 @@ The assistant guides users through a series of questions to understand their car
 - Suggestion buttons for quick responses
 - Intelligent question handling and validation
 - State-based conversation flow
+- Multi-stage profile creation process
 
 ## Tech Stack
 
@@ -26,7 +27,7 @@ The assistant guides users through a series of questions to understand their car
 - Backend: Node.js, Express
 - Database: MongoDB
 - Cache: Redis
-- AI: ~~llama3.2:3b model~~ Claude Haiku
+- AI: Claude Haiku
 
 ## Project Structure
 
@@ -46,10 +47,25 @@ The assistant guides users through a series of questions to understand their car
 │   │   ├── CarpoolAgent.js
 │   │   ├── InitialQuestionHandler.js
 │   │   ├── MandatoryQuestionHandler.js
+│   │   ├── OptionalQuestionHandler.js
 │   │   ├── StateManager.js
 │   │   └── ValidationHandler.js
 │   ├── prompts/        # AI prompt templates
+│   │   ├── activity_question_prompt.js
+│   │   ├── basic_question_prompt.js
+│   │   ├── initial_question_prompt.js
+│   │   ├── initial_validation_prompt.js
+│   │   ├── optional_question_prompt.js
+│   │   ├── optional_validation_prompt.js
+│   │   ├── pref_question_prompt.js
+│   │   ├── schedule_question_prompt.js
+│   │   └── school_question_prompt.js
 │   ├── vars/           # Enums and templates
+│   │   ├── claudeEnum.js
+│   │   ├── dependentTemplate.js
+│   │   ├── questionTypeEnum.js
+│   │   ├── stateEnum.js
+│   │   └── vars.js
 │   └── utils.js        # Utility functions
 ├── public/
 │   └── images/         # Static images
@@ -65,14 +81,14 @@ The assistant guides users through a series of questions to understand their car
 npm install
 ```
 
-2. Start MongoDB and Redis Service:
-```bash
-sudo npm run db
+2. Create a .env file in the root directory and add your Claude API key:
+```
+CLAUDE_API_KEY=your_api_key_here
 ```
 
-3. Start Ollama service (optional, no longer required since we move onto Claude API):
+3. Start MongoDB and Redis services:
 ```bash
-ollama serve
+npm run db
 ```
 
 4. Seed the database:
@@ -101,9 +117,6 @@ The application will be available at http://localhost:3000
 - DELETE `/api/users/:id` - Delete user
 
 ## Development
-- `ollama serve` is no longer required since dev move onto Claude. If you'd like to use local LLM model, you can uncomment ollama related part to test.
-- a `Claude` API Key is needed. Please provide a key in .env file at root level
-- Use `sudo service mongodb start` to start MongoDB
-- Use `sudo service redis-server start` to start Redis
-- Use `npm run db` will do above two command all at once :)
-- Use `npm run dev` to start the application server👍
+- A `Claude` API Key is required. Please provide a key in .env file at root level
+- Use `npm run db` to start both MongoDB and Redis services
+- Use `npm run dev` to start the application server
