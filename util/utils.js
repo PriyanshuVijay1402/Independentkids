@@ -91,11 +91,31 @@ function extractDeepJSON(input) {
   }
 }
 
-
-
+function assembleDependent(dependentData) {
+  return {
+    name: dependentData.basic.name,
+    gender: dependentData.basic.gender,
+    age: dependentData.basic.age,
+    grade: dependentData.basic.grade,
+    school_info: {
+      name: dependentData.school.name,
+      address: dependentData.school.address,
+      time_window: dependentData.school.time_window
+    },
+    activities: [{
+      name: dependentData.activity.name,
+      address: dependentData.activity.address,
+      time_window: dependentData.activity.time_window,
+      sharing_preferences: dependentData.preference,
+      schedule: dependentData.schedule || []
+    }],
+    additional_info: dependentData.additional_info
+  };
+}
 
 module.exports = {
   claude,
   extractJSON,
-  extractDeepJSON
+  extractDeepJSON,
+  assembleDependent
 };

@@ -16,11 +16,10 @@ const timeWindowSchema = new mongoose.Schema({
 
 // Define the transport_availability sub-schema
 const transportAvailabilitySchema = new mongoose.Schema({
-  can_provide: { type: Boolean, required: true },
-  vehicle_id: Number,
   time_window: {
     type: timeWindowSchema,
-    required: function () { return this.can_provide; } // Conditional requirement
+    required: false,
+    default: null
   }
 }, { _id: false });
 
@@ -56,11 +55,14 @@ const schoolInfoSchema = new mongoose.Schema({
   time_window: timeWindowSchema
 }, { _id: false });
 
-// Define the activity sub-schema
-const activitySchema = new mongoose.Schema({
-  name: String,
-  address: addressSchema,
-  time_window: timeWindowSchema
+// Define the sharing_preferences sub-schema
+const sharingPreferencesSchema = new mongoose.Schema({
+  willing_to_share_rides: Boolean,
+  sharing_type: {
+    type: String,
+    enum: ['rotation', 'split', null],
+    default: null
+  }
 }, { _id: false });
 
 // Define the schedule sub-schema
@@ -72,14 +74,13 @@ const scheduleSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
-// Define the sharing_preferences sub-schema
-const sharingPreferencesSchema = new mongoose.Schema({
-  willing_to_share_rides: Boolean,
-  sharing_type: {
-    type: String,
-    enum: ['rotation', 'split', null],
-    default: null
-  }
+// Define the activity sub-schema
+const activitySchema = new mongoose.Schema({
+  name: String,
+  address: addressSchema,
+  time_window: timeWindowSchema,
+  sharing_preferences: sharingPreferencesSchema,
+  schedule: [scheduleSchema],
 }, { _id: false });
 
 // Define the safety_info sub-schema
@@ -106,8 +107,6 @@ const dependentInformationSchema = new mongoose.Schema({
   grade: Number,
   school_info: schoolInfoSchema,
   activities: [activitySchema],
-  sharing_preferences: sharingPreferencesSchema,
-  schedule: [scheduleSchema],
   additional_info: mongoose.Schema.Types.Mixed // This allows for any type of data
 }, { _id: false });
 

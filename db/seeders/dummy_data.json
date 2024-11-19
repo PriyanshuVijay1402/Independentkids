@@ -57,8 +57,10 @@
               "city": "Anytown",
               "state": "CA"
             },
-            "start_time": "8:00 AM",
-            "end_time": "3:00 PM"
+            "time_window":{
+              "start_time": "8:00 AM",
+              "end_time": "3:00 PM"
+            }
           },
           "activities": [
             {
@@ -68,8 +70,10 @@
                 "city": "Anytown",
                 "state": "CA"
               },
-              "start_time": "16:00",
-              "end_time": "17:30",
+              "time_window": {
+                "start_time": "16:00",
+                "end_time": "17:30"
+              },
               "sharing_preferences": {
                 "willing_to_share_rides": true,
                 "sharing_type": "split"

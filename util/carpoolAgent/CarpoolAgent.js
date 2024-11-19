@@ -3,6 +3,7 @@ const InitialQuestionHandler = require('./InitialQuestionHandler');
 const MandatoryQuestionHandler = require('./MandatoryQuestionHandler');
 const OptionalQuestionHandler = require('./OptionalQuestionHandler');
 const Phase = require('../vars/stateEnum');
+const { assembleDependent } = require('../utils');
 
 class CarpoolAgent {
   constructor(userId) {
@@ -38,14 +39,7 @@ class CarpoolAgent {
       if (this.stateManager.getCurrentPhase() === Phase.CONFIRMATION) {
         return {
           answer: `👍 We are all set.`,
-          info: {
-            basic: this.stateManager.memory.currentDependent.basic,
-            school: this.stateManager.memory.currentDependent.school,
-            activity: this.stateManager.memory.currentDependent.activity,
-            preference: this.stateManager.memory.currentDependent.preference,
-            schedule: this.stateManager.memory.currentDependent.schedule,
-            additional_info: this.stateManager.memory.currentDependent.additional_info
-          }
+          info: assembleDependent(this.stateManager.getCurrentDependent())
         };
       }
     } catch (error) {

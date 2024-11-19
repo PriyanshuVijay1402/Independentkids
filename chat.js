@@ -5,8 +5,8 @@ const resetButton = document.createElement('button');
 
 // following id changes when rerun "npm run seed"
 // need to find out new id in MongoDB
-let TEST_USER = "673bd84716f69784b37fef06"
-// let TEST_USER = "673bd84716f69784b37fef07"
+let TEST_USER = "673cbe5bc70e73de15fd22fe"
+// let TEST_USER = "673cbe5bc70e73de15fd22ff"
 
 // Add reset button
 resetButton.id = 'reset-button';
