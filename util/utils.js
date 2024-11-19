@@ -53,7 +53,7 @@ function extractJSON(input) {
         }
       }
     }
-    
+
     // If no valid JSON found, log a warning and return the original text
     console.warn('No valid JSON found in content:', text);
     return text;
@@ -94,22 +94,31 @@ function extractDeepJSON(input) {
 function assembleDependent(stateManager) {
   try {
     const dependentData = stateManager.getCurrentDependent();
-    const profile = stateManager.userProfile
-    console.debug(profile)
+    if (!dependentData || !dependentData.basic) {
+      throw new Error('Invalid dependent data structure');
+    }
+
+    const profile = stateManager.userProfile;
+    if (!profile) {
+      throw new Error('User profile not found');
+    }
+
     const existingDependent = profile.dependent_information?.find(d => d.name === dependentData.basic.name);
-    console.debug(existingDependent)
+
+    if (!dependentData.activity || !dependentData.activity.name) {
+      throw new Error('Invalid activity data structure');
+    }
+
+    const newActivity = {
+      name: dependentData.activity.name,
+      address: dependentData.activity.address,
+      time_window: dependentData.activity.time_window,
+      sharing_preferences: dependentData.preference,
+      schedule: dependentData.schedule || []
+    };
 
     // If dependent exists in cache, append new activity
     if (existingDependent) {
-      const newActivity = {
-        name: dependentData.activity.name,
-        address: dependentData.activity.address,
-        time_window: dependentData.activity.time_window,
-        sharing_preferences: dependentData.preference,
-        schedule: dependentData.schedule || []
-      };
-
-      // Return existing dependent data with new activity appended and additional_info updated
       return {
         ...existingDependent,
         activities: [...existingDependent.activities, newActivity],
@@ -128,14 +137,8 @@ function assembleDependent(stateManager) {
         address: dependentData.school.address,
         time_window: dependentData.school.time_window
       },
-      activities: [{
-        name: dependentData.activity.name,
-        address: dependentData.activity.address,
-        time_window: dependentData.activity.time_window,
-        sharing_preferences: dependentData.preference,
-        schedule: dependentData.schedule || []
-      }],
-      additional_info: dependentData.additional_info
+      activities: [newActivity],
+      additional_info: dependentData.additional_info || {}
     };
   } catch (error) {
     console.error('Error in assembleDependent:', error);

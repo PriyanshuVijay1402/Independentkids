@@ -4,6 +4,7 @@ const MandatoryQuestionHandler = require('./MandatoryQuestionHandler');
 const OptionalQuestionHandler = require('./OptionalQuestionHandler');
 const Phase = require('../vars/stateEnum');
 const { assembleDependent } = require('../utils');
+const { updateCachedDependent } = require('../../config/redis');
 
 class CarpoolAgent {
   constructor(userId) {
@@ -37,9 +38,11 @@ class CarpoolAgent {
         if (llmResponse) return llmResponse;
       }
       if (this.stateManager.getCurrentPhase() === Phase.CONFIRMATION) {
+        const dependent = await assembleDependent(this.stateManager);
+        await updateCachedDependent(this.stateManager.user, dependent);
         return {
           answer: `👍 We are all set.`,
-          info: await assembleDependent(this.stateManager),
+          info: dependent,
           isProfileComplete: true
         };
       }

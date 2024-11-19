@@ -233,8 +233,42 @@ async function resetProfile() {
 }
 
 async function findCarpool() {
-  addMessage("Starting carpool search based on your profile...");
-  // Additional carpool search logic will be implemented here
+  try {
+    // First sync cached user data back into DB
+    const syncResponse = await fetch(`http://localhost:3000/api/users/${TEST_USER}/sync-cache`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!syncResponse.ok) {
+      throw new Error(`HTTP error during sync! status: ${syncResponse.status}`);
+    }
+
+    const syncedUser = await syncResponse.json();
+    console.log('Successfully synced user data:', syncedUser);
+
+    // // Now perform the carpool matching
+    // const matchResponse = await fetch(`http://localhost:3000/api/users/${TEST_USER}/match-carpool`, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   }
+    // });
+
+    // if (!matchResponse.ok) {
+    //   throw new Error(`HTTP error during matching! status: ${matchResponse.status}`);
+    // }
+
+    // const matches = await matchResponse.json();
+    // addMessage("Here are your potential carpool matches:");
+    // addInfo(matches);
+
+  } catch (error) {
+    console.error('Error in findCarpool:', error);
+    addMessage(`Error finding carpool matches: ${error.message}`);
+  }
 }
 
 async function getFirstQuestion() {
@@ -300,7 +334,7 @@ userInput.addEventListener('keypress', (e) => {
     sendMessage();
   }
 });
-resetButton.addEventListener('click', resetProfile);
+// resetButton.addEventListener('click', resetProfile);
 findCarpoolButton.addEventListener('click', findCarpool);
 
 // Initial greeting and first question
