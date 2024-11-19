@@ -3,7 +3,10 @@ const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-button');
 const resetButton = document.createElement('button');
 
-let TEST_USER = "6722bd9dca5566a55b0c31eb"
+// following id changes when rerun "npm run seed"
+// need to find out new id in MongoDB
+let TEST_USER = "673bd84716f69784b37fef06"
+// let TEST_USER = "673bd84716f69784b37fef07"
 
 // Add reset button
 resetButton.id = 'reset-button';

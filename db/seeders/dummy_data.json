@@ -6,9 +6,7 @@
       "address": {
         "street": "123 Main St",
         "city": "Anytown",
-        "state": "USA",
-        "latitude": 40.730610,
-        "longitude": -73.935242
+        "state": "CA"
       },
       "email": "john.doe@email.com",
       "phone": "555-1234",
@@ -57,9 +55,7 @@
             "address": {
               "street": "456 Oak Rd",
               "city": "Anytown",
-              "state": "USA",
-              "latitude": 40.725330,
-              "longitude": -73.931642
+              "state": "CA"
             },
             "start_time": "8:00 AM",
             "end_time": "3:00 PM"
@@ -70,12 +66,10 @@
               "address": {
                 "street": "789 Elm St",
                 "city": "Anytown",
-                "state": "USA",
-                "latitude": 40.735690,
-                "longitude": -73.941902
+                "state": "CA"
               },
-              "start_time": "4:00 PM",
-              "end_time": "5:30 PM",
+              "start_time": "16:00",
+              "end_time": "17:30",
               "sharing_preferences": {
                 "willing_to_share_rides": true,
                 "sharing_type": "split"
@@ -85,30 +79,20 @@
                   "day_of_week": 1,
                   "transport_availability": {
                     "dropoff": {
-                      "can_provide": true,
-                      "vechile_id": 0,
                       "time_window": {
-                        "earliest": "3:30 PM",
-                        "latest": "3:50 PM"
+                        "start_time": "15:30",
+                        "end_time": "15:50"
                       }
-                    },
-                    "pickup": {
-                      "can_provide": false
                     }
                   }
                 },
                 {
                   "day_of_week": 3,
                   "transport_availability": {
-                    "dropoff": {
-                      "can_provide": false
-                    },
                     "pickup": {
-                      "can_provide": true,
-                      "vechile_id": 0,
                       "time_window": {
-                        "earliest": "5:30 PM",
-                        "latest": "5:45 PM"
+                        "start_time": "17:30",
+                        "end_time": "17:45"
                       }
                     }
                   }
@@ -118,9 +102,7 @@
           ],
           "additional_info": {
             "allergies": "peanuts",
-            "carries_medicine": true,
-            "preferred_seat": "window",
-            "needs_early_arrival": 15
+            "seat_preference": "back seat window"
           }
         }
       ],
@@ -130,6 +112,79 @@
         "language_preferences": [
           "English",
           "Spanish"
+        ]
+      }
+    },
+    {
+      "_id":"86d9b5f0-4c8a-4f1b-a2e6-bf8b02d7b456",
+      "name":"Sarah Smith",
+      "address":{
+        "street":"789 Oak Rd",
+        "city":"Anytown",
+        "state":"CA"
+      },
+      "email":"sarah.smith@email.com",
+      "phone":"555-5678",
+      "safety_info":{
+        "drivers":[
+          {
+            "relationeship":"self",
+            "driving_record":"minor violations",
+            "background_check":"passed",
+            "drivingLicense":{
+              "number":"DEF456789",
+              "state":"CA",
+              "expirationDate":"2027-12-31"
+            }
+          },
+          {
+            "name":"Robert Smith",
+            "relationeship":"spouse",
+            "driving_record":"clean",
+            "background_check":"passed",
+            "drivingLicense":{
+              "number":"XYZ789012",
+              "state":"CA",
+              "expirationDate":"2026-08-31"
+            }
+          }
+        ],
+        "vehicles":[
+          {
+            "_id":0,
+            "type":"Truck",
+            "make":"Chevrolet",
+            "model":"Silverado",
+            "year":2021,
+            "passengerCapacity":4,
+            "carSeats":0,
+            "boosterSeats":1,
+            "licensePlate":"JKL345",
+            "hasTrunk":false
+          },
+          {
+            "_id":1,
+            "type":"Sedan",
+            "make":"Toyota",
+            "model":"Corolla",
+            "year":2019,
+            "passengerCapacity":4,
+            "carSeats":0,
+            "boosterSeats":1,
+            "licensePlate":"GHI012",
+            "hasTrunk":true
+          }
+        ]
+      },
+      "isRider": true,
+      "isDriver": true,
+      "friend_list":[],
+      "dependent_information":[],
+      "carpool_preference":{
+        "preferred_carpool_group_size":3,
+        "gender_preference":"no_preference",
+        "language_preferences":[
+          "English"
         ]
       }
     }

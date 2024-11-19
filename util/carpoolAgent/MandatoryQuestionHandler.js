@@ -93,7 +93,9 @@ class MandatoryQuestionHandler {
           this.stateManager.memory.currentType = Type.ACTIVITY;
           // handle existing school info
           const schoolInfo = this.stateManager.userProfile.dependent_information.find(dependent => dependent.name === dependentName).school_info;
-          this.stateManager.memory.currentDependent.school = schoolInfo
+          const additionalInfo = this.stateManager.userProfile.dependent_information.find(dependent => dependent.name === dependentName).additional_info;
+          this.stateManager.memory.currentDependent.school = schoolInfo;
+          this.stateManager.memory.currentDependent.additional_info = additionalInfo;
         }
         // remember current question
         this.stateManager.setCurrentQuestion(response.answer);
@@ -278,7 +280,7 @@ class MandatoryQuestionHandler {
           } else {
             this.stateManager.memory.nextTypeReady = true;
             return {
-              answer: response.answer + `👍 We can move onto some additional questions that may enhance your carpooling experience, or feel free to make any updates`,
+              answer: response.answer + `👍 We are ready for next step, or feel free to make any updates`,
               hintMsg: response.hint,
               info: response.schedule,
               suggestions: ["next step"]

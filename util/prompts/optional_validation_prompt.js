@@ -1,80 +1,75 @@
 const prompts = {
-  optionalValidation: (input, context) => {
-    return `You are a carpool matching assistant performing input validation. Analyze the following:
+  optionalValidation: (input, context, profile) => {
+    return `You are a carpool matching assistant performing information extraction. Analyze the following:
 
 USER'S RESPONSE: "${input}"
 ORIGINAL QUESTION: "${context.question}"
-QUESTION CATEGORY: "${context.category}"
+USER'S PROFILE: "${profile}"
 
-VALIDATION RULES:
-1. RELEVANCE CHECK
-- The answer should reasonably relate to the question's intent
-- Response should connect to the category theme (comfort_amenities, safety_protocols, or dependent_needs)
-- Both direct and indirect relevant answers are acceptable
+EXTRACTION RULES:
+1. INFORMATION EXTRACTION
+- Extract ONLY NEW relevant key:value points from the response
+- DO NOT extract information if the same or similar key/value already exists in the profile
+- Each point MUST be related to carpooling context (needs, arrangements, schedules, etc.)
+- Each point MUST reasonably connect to the original question
+- Ignore content that is:
+  * Already present in the profile (same or similar meaning)
+  * Unrelated to carpooling
+  * Not relevant to the question asked
+  * Not providing meaningful information
 
-2. FORMAT CHECK
-- Answer should be in natural language
-- Answer should not be empty or consist only of special characters
-- Answer length should be reasonable (between 1 and 200 characters)
+2. DUPLICATE CHECKING
+- Before adding any key:value pair, check if:
+  * The exact same information exists in the profile
+  * A similar key with equivalent meaning exists (e.g., "seating_preference" vs "seat_preference")
+  * The value provides the same information in different words
+- Skip extraction if the information is redundant
 
-3. CATEGORY-SPECIFIC CHECKS
-For comfort_amenities:
-- Can include any preferences that make the ride more comfortable
-- This includes physical comfort (seating, temperature) AND emotional comfort (activities, conversation topics, entertainment)
-- Should be something that helps understand what makes for a better ride experience
+3. FORMAT REQUIREMENTS
+- Input should be in natural language
+- Not empty or only special characters
+- Reasonable length (1-200 characters)
 
-For safety_protocols:
-- Should relate to safety or well-being during the ride
-- Can include physical safety, emotional safety, or general well-being considerations
-- Information should help ensure a secure and comfortable journey
-
-For dependent_needs:
-- Can include any preferences, habits, or needs of the dependent
-- Both direct needs (physical requirements) and indirect needs (preferences, interests, conversation topics) are valid
-- Should help understand how to better accommodate the dependent during rides
-
-When marking an answer as invalid, provide a brief reason and an example of a valid answer in this format:
-"[Brief reason]. Example of valid answer: [example]"
-
-Output format MUST be a JSON object containing:
+Output format MUST be a JSON object:
 {
-  "isValid": boolean,
-  "info": {
-    "key": string, // A short label summarizing the answer (e.g., "conversation_preference", "comfort_activity", "ride_interest")
-    "value": string // A concise summary of the user's answer
-  } | null, // Include info only if isValid is true
-  "reason": string | null // If invalid, include reason and example. If valid, use null
+  "isValid": boolean, // false if no NEW relevant carpool information could be extracted
+  "info": { // Object containing ONLY NEW extracted key:value pairs
+    "key1": "value1",
+    "key2": "value2",
+    ...
+  },
+  "ignoredReason": string | null // Explain what was ignored and why (including duplicates), null if nothing ignored
 }
 
 Example validations:
-1. Q: "Are there any particular activities or topics that help your child feel more comfortable during car rides?"
-   Category: "comfort_amenities"
-   A: "She likes to talk about Harry Potter"
+1. Profile: {"allergy": "peanuts"}
+   Q: "Would you like to share about any medical needs?"
+   A: "He's allergic to peanuts and needs to sit by the window"
    Response: {
      "isValid": true,
      "info": {
-       "key": "conversation_preference",
-       "value": "discussing Harry Potter"
+       "seat_preference": "window"
      },
-     "reason": null
+     "reason": "Ignored peanut allergy as it's already in profile"
    }
 
-2. Q: "Does your child have any specific routines during car rides?"
-   Category: "dependent_needs"
-   A: "k"
+2. Profile: {"environment_preference": "quiet"}
+   Q: "Any specific needs during the carpool ride?"
+   A: "Needs quiet environment and booster seat"
    Response: {
-     "isValid": false,
-     "info": null,
-     "reason": "Answer is too vague. Example of valid answer: 'They like to listen to music' or 'Usually reads books during the ride'"
+     "isValid": true,
+     "info": {
+       "equipment_need": "booster seat"
+     },
+     "reason": "Ignored quiet environment preference as it's already in profile"
    }
 
-3. Q: "Any specific comfort preferences during the ride?"
-   Category: "comfort_amenities"
-   A: "whatever"
+3. Q: "Any preferences for the carpool arrangement?"
+   A: "xyz123!!!"
    Response: {
      "isValid": false,
-     "info": null,
-     "reason": "Answer lacks specific preferences. Example of valid answer: 'Prefers window seat' or 'Likes to have AC on'"
+     "info": {},
+     "reason": "No meaningful carpool-related information provided"
    }
 
 Do not include any other text, explanation, or formatting in your response.`;
