@@ -5,7 +5,7 @@ An AI-powered chat assistant that helps users create and manage their carpool pr
 The assistant guides users through a series of questions to understand their carpooling needs and preferences.
 
 
-https://github.com/user-attachments/assets/c145d2f8-95a1-4c1e-b8e5-a129f45bf698
+[chatapp-demo.webm](https://github.com/user-attachments/assets/3ed06002-e6d5-44c2-b9f4-4cd708d8df2a)
 
 
 ## Features
