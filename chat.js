@@ -2,6 +2,7 @@ const chatContainer = document.getElementById('chat-container');
 const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-button');
 const resetButton = document.createElement('button');
+const findCarpoolButton = document.createElement('button');
 
 // following id changes when rerun "npm run seed"
 // need to find out new id in MongoDB
@@ -13,6 +14,12 @@ resetButton.id = 'reset-button';
 resetButton.textContent = 'Reset';
 resetButton.style.display = 'none';
 document.querySelector('.chat-controls').appendChild(resetButton);
+
+// Add find carpool button
+findCarpoolButton.id = 'find-carpool-button';
+findCarpoolButton.textContent = 'Find Carpool';
+findCarpoolButton.style.display = 'none';
+document.querySelector('.chat-controls').appendChild(findCarpoolButton);
 
 function addMessage(message, isUser = false) {
   const messageElement = document.createElement('div');
@@ -167,10 +174,11 @@ async function sendMessage() {
         addSuggestions(data.response.suggestions);
       }
 
-      // Show reset button when profile is complete
+      // Show reset and find carpool buttons when profile is complete
       if (data.response.isProfileComplete) {
-        console.log('Profile complete, showing reset button');
-        resetButton.style.display = 'block';
+        console.log('Profile complete, showing reset and find carpool buttons');
+        // resetButton.style.display = 'block';
+        findCarpoolButton.style.display = 'block';
       }
     } else if (data.error) {
       console.error('Error in response:', data.error);
@@ -207,6 +215,7 @@ async function resetProfile() {
     const data = await response.json();
     chatContainer.innerHTML = '';
     resetButton.style.display = 'none';
+    findCarpoolButton.style.display = 'none';
 
     // Show initial greeting with username
     await showInitialGreeting();
@@ -221,6 +230,11 @@ async function resetProfile() {
     console.error('Error:', error);
     addMessage(`Error resetting profile: ${error.message}`);
   }
+}
+
+async function findCarpool() {
+  addMessage("Starting carpool search based on your profile...");
+  // Additional carpool search logic will be implemented here
 }
 
 async function getFirstQuestion() {
@@ -287,6 +301,7 @@ userInput.addEventListener('keypress', (e) => {
   }
 });
 resetButton.addEventListener('click', resetProfile);
+findCarpoolButton.addEventListener('click', findCarpool);
 
 // Initial greeting and first question
 showInitialGreeting().then(() => {
