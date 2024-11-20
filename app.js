@@ -8,6 +8,7 @@ const {
   errorHandlingMiddleware,
   setupGlobalErrorHandlers
 } = require('./middleware');
+const geocodeRoutes = require('./routes/geocodeRoutes');
 
 const app = express();
 const port = 3000;
@@ -33,6 +34,7 @@ app.use(debugMiddleware);
 
 // Use routes
 app.use('/', routes);
+app.use('/api/geocode', geocodeRoutes);
 
 // Error handling
 app.use(errorHandlingMiddleware);
