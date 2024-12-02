@@ -1,5 +1,5 @@
 const ValidationHandler = require('./ValidationHandler');
-const { claude, extractJSON, extractDeepJSON } = require('../utils.js');
+const { claude, extractJSON, extractDeepJSON, validateAndFormatAddressString } = require('../utils.js');
 
 const basicPrompts = require('../prompts/basic_question_prompt.js');
 const schoolPrompts = require('../prompts/school_question_prompt.js');
@@ -28,15 +28,21 @@ class MandatoryQuestionHandler {
           input
         );
       } else if (state.currentType === Type.SCHOOL){
-        prompt = schoolPrompts.schoolQuestion(
-          this.stateManager.memory.currentDependent.school,
-          input
-        );
+        const stringCheck = await validateAndFormatAddressString(input);
+        if (stringCheck.success) {
+          prompt = schoolPrompts.schoolQuestion(
+            this.stateManager.memory.currentDependent.school,
+            stringCheck.formattedString
+          );
+        }
       } else if (state.currentType === Type.ACTIVITY){
-        prompt = activityPrompts.activityQuestion(
-          this.stateManager.memory.currentDependent.activity,
-          input
-        );
+        const stringCheck = await validateAndFormatAddressString(input);
+        if (stringCheck.success) {
+          prompt = activityPrompts.activityQuestion(
+            this.stateManager.memory.currentDependent.activity,
+            stringCheck.formattedString
+          );
+        }
       } else if (state.currentType === Type.PREF){
         prompt = prefPrompts.prefQuestion(
           this.stateManager.memory.currentDependent.preference,
@@ -50,14 +56,23 @@ class MandatoryQuestionHandler {
           input
         );
       }
+      if (prompt) {
+        const llmResponse = await claude(prompt);
+        console.debug(llmResponse);
+        const responseText = state.currentType === Type.SCHEDULE? extractDeepJSON(llmResponse) : extractJSON(llmResponse);
+        this.stateManager.setCurrentQuestion(responseText.answer)
+        this.stateManager.setCurrentSuggestion(responseText.suggestion)
+        return responseText
+      }
+      else{
+        return {
+          answer: "It seems you've entered an invalid address, please check again.",
+          hintMsg: "Please provide a valid address in the following format: street number, street name, city, state, and ZIP code.",
+          hints: ["For example: '123 Main Street, Springfield, IL 62704'."]
+        };
+      }
 
-      const llmResponse = await claude(prompt);
-      console.debug(llmResponse);
-      const responseText = state.currentType === Type.SCHEDULE? extractDeepJSON(llmResponse) : extractJSON(llmResponse);
-      this.stateManager.setCurrentQuestion(responseText.answer)
-      this.stateManager.setCurrentSuggestion(responseText.suggestion)
 
-      return responseText
     } catch (error) {
       console.error('Error in generateMandatoryQuestion:', error);
       throw error;

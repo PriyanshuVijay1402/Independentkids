@@ -5,7 +5,9 @@ const addressSchema = new mongoose.Schema({
   street: String,
   city: String,
   state: String,
-  country: { type: String, default: null }
+  country: { type: String, default: null },
+  latitude: { type: Number, default: null },
+  longitude: { type: Number, default: null }
 }, { _id: false });
 
 // Define the time_window sub-schema

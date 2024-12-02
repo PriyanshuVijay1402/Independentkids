@@ -44,7 +44,9 @@ RESPONSE FORMAT (STRICT JSON, NO ADDITIONAL TEXT):
         "street": "string | null",
         "city": "string | null",
         "state": "string | null",
-        "country": "string | null"
+        "country": "string | null",
+        "latitude": "number | null",
+        "longitude": "number | null"
      },
     "time_window": {
         "start_time": "string | null",
@@ -64,7 +66,9 @@ EXAMPLES:
       "street": "123 Education Ave",
       "city": "Springfield",
       "state": "IL",
-      "country": "U.S.A"
+      "country": "U.S.A",
+      "latitude": 39.7817,
+      "longitude": -89.6501
     },
     "time_window": {
       "start_time": "08:00",
@@ -83,7 +87,9 @@ EXAMPLES:
       "street": "456 Learning Blvd",
       "city": "Portland",
       "state": "OR",
-      "country": "U.S.A"
+      "country": "U.S.A",
+      "latitude": 45.5155,
+      "longitude": -122.6789
     },
     "time_window": {
       "start_time": null,

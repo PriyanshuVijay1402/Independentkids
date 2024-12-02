@@ -1,15 +1,17 @@
 {
   "users": [
     {
-      "_id": "3c1a3d6e-2b4f-4d81-a5c9-d9aa903ab123",
-      "name": "John Doe",
+      "_id": "3c1a3d6e-2b4f-4d81-a5c9-d9a78djli123",
+      "name": "Alex Chien",
       "address": {
-        "street": "123 Main St",
-        "city": "Anytown",
-        "state": "CA"
+        "street": "5151 Northway Rd",
+        "city": "Pleasanton",
+        "state": "CA",
+        "latitude": 37.67541,
+        "longitude": -121.88536
       },
-      "email": "john.doe@email.com",
-      "phone": "555-1234",
+      "email": "Alexch@email.com",
+      "phone": "858-2844",
       "safety_info": {
         "drivers": [
           {
@@ -17,23 +19,22 @@
             "driving_record": "clean",
             "background_check": "passed",
             "drivingLicense": {
-              "number": "ABC123456",
+              "number": "L8937567",
               "state": "CA",
-              "expirationDate": "2025-06-30"
+              "expirationDate": "2025-09-30"
             }
           }
         ],
         "vehicles": [
           {
-            "_id": 0,
-            "type": "Minivan",
-            "make": "Dodge",
-            "model": "Caravan",
-            "year": 2017,
-            "passengerCapacity": 7,
-            "carSeats": 1,
+            "type": "SUV",
+            "make": "Toyota",
+            "model": "Highlander",
+            "year": 2020,
+            "passengerCapacity": 8,
+            "carSeats": 2,
             "boosterSeats": 1,
-            "licensePlate": "DEF789",
+            "licensePlate": "L8KPOI",
             "hasTrunk": true
           }
         ]
@@ -42,154 +43,194 @@
       "isDriver": true,
       "friend_list": [
         "86d9b5f0-4c8a-4f1b-a2e6-bf8b02d7b456",
-        "47e3c2a1-9d14-4b7f-a5c3-c3f1d2e4f789"
+        "47e3c2a1-9d14-4b7f-a5c3-c3f1d8888789"
       ],
       "dependent_information": [
         {
-          "name": "Jane Doe",
+          "name": "Emily Chien",
           "gender": "Female",
-          "age": 12,
-          "grade": 7,
+          "age": 10,
+          "grade": 4,
           "school_info": {
-            "name": "Anytown Middle School",
+            "name": "Walnut Grove Elementary School",
             "address": {
-              "street": "456 Oak Rd",
-              "city": "Anytown",
-              "state": "CA"
+              "street": "1999 Harvest Rd",
+              "city": "Pleasanton",
+              "state": "CA",
+              "latitude": 37.67329,
+              "longitude": -121.88537
             },
-            "time_window":{
-              "start_time": "8:00 AM",
+            "time_window": {
+              "start_time": "8:20 AM",
               "end_time": "3:00 PM"
             }
           },
           "activities": [
             {
-              "name": "Soccer",
+              "name": "piano lessons",
               "address": {
-                "street": "789 Elm St",
-                "city": "Anytown",
-                "state": "CA"
+                "street": "1024 Serpentine Ln # 118",
+                "city": "Pleasanton",
+                "state": "CA",
+                "latitude": 37.67418,
+                "longitude": -121.86691
               },
               "time_window": {
-                "start_time": "16:00",
-                "end_time": "17:30"
+                "start_time": "6:15 PM",
+                "end_time": "7:00 PM"
               },
               "sharing_preferences": {
                 "willing_to_share_rides": true,
-                "sharing_type": "split"
+                "sharing_type": "rotation"
               },
               "schedule": [
                 {
-                  "day_of_week": 1,
-                  "transport_availability": {
-                    "dropoff": {
-                      "time_window": {
-                        "start_time": "15:30",
-                        "end_time": "15:50"
-                      }
-                    }
-                  }
+                  "day_of_week": 1
                 },
                 {
-                  "day_of_week": 3,
-                  "transport_availability": {
-                    "pickup": {
-                      "time_window": {
-                        "start_time": "17:30",
-                        "end_time": "17:45"
-                      }
-                    }
-                  }
+                  "day_of_week": 3
+                }
+              ]
+            },
+            {
+              "name": "chess lessons",
+              "address": {
+                "street": "1024 Serpentine Ln # 101",
+                "city": "Pleasanton",
+                "state": "CA",
+                "latitude": 37.67418,
+                "longitude": -121.86691
+              },
+              "time_window": {
+                "start_time": "6:00 PM",
+                "end_time": "7:00 PM"
+              },
+              "sharing_preferences": {
+                "willing_to_share_rides": true,
+                "sharing_type": "rotation"
+              },
+              "schedule": [
+                {
+                  "day_of_week": 2
+                },
+                {
+                  "day_of_week": 4
                 }
               ]
             }
           ],
           "additional_info": {
-            "allergies": "peanuts",
-            "seat_preference": "back seat window"
+            "allergies": "mango",
+            "carries_medicine": false,
+            "preferred_seat": "window",
+            "needs_early_arrival": 15
+          }
+        },
+        {
+          "name": "Jack Chien",
+          "gender": "Male",
+          "age": 8,
+          "grade": 3,
+          "school_info": {
+            "name": "Walnut Grove Elementary School",
+            "address": {
+              "street": "1999 Harvest Rd",
+              "city": "Pleasanton",
+              "state": "CA",
+              "latitude": 37.67329,
+              "longitude": -121.88537
+            },
+            "time_window": {
+              "start_time": "8:20 AM",
+              "end_time": "3:00 PM"
+            }
+          },
+          "activities": [
+            {
+              "name": "Kungfu Class",
+              "address": {
+                "street": "1807 Santa Rita Rd # B",
+                "city": "Pleasanton",
+                "state": "CA",
+                "latitude": 37.678210266034306,
+                "longitude": -121.87457531204618
+              },
+              "time_window": {
+                "start_time": "6:30 PM",
+                "end_time": "7:30 PM"
+              },
+              "schedule": [
+                {
+                  "day_of_week": 2
+                },
+                {
+                  "day_of_week": 4
+                }
+              ]
+            }
+          ],
+          "additional_info": {
+            "preferred_seat": "aisle",
+            "needs_early_arrival": 0
           }
         }
       ],
       "carpool_preference": {
-        "preferred_carpool_group_size": 3,
-        "gender_preference": "same_gender_as_kid",
-        "language_preferences": [
-          "English",
-          "Spanish"
-        ]
+        "carpool_with": 2,
+        "riders_preferred": 3,
+        "drivers_preferred": 2
       }
     },
     {
-      "_id":"86d9b5f0-4c8a-4f1b-a2e6-bf8b02d7b456",
-      "name":"Sarah Smith",
-      "address":{
-        "street":"789 Oak Rd",
-        "city":"Anytown",
-        "state":"CA"
+      "_id": "3c1a3d6e-2b4f-4d81-a5c9-d9a78djli123",
+      "name": "James Albert",
+      "address": {
+        "street": "4750 Sutter Gate Ave",
+        "city": "Pleasanton",
+        "state": "USA",
+        "latitude": 37.6859421968224,
+        "longitude": -121.881662849866
       },
-      "email":"sarah.smith@email.com",
-      "phone":"555-5678",
-      "safety_info":{
-        "drivers":[
+      "email": "JAlbert@hotmail.com",
+      "phone": "800-2387",
+      "safety_info": {
+        "drivers": [
           {
-            "relationeship":"self",
-            "driving_record":"minor violations",
-            "background_check":"passed",
-            "drivingLicense":{
-              "number":"DEF456789",
-              "state":"CA",
-              "expirationDate":"2027-12-31"
-            }
-          },
-          {
-            "name":"Robert Smith",
-            "relationeship":"spouse",
-            "driving_record":"clean",
-            "background_check":"passed",
-            "drivingLicense":{
-              "number":"XYZ789012",
-              "state":"CA",
-              "expirationDate":"2026-08-31"
+            "relationship": "self",
+            "driving_record": "clean",
+            "background_check": "passed",
+            "drivingLicense": {
+              "number": "K8897353",
+              "state": "CA",
+              "expirationDate": "2025-05-10"
             }
           }
         ],
-        "vehicles":[
+        "vehicles": [
           {
-            "_id":0,
-            "type":"Truck",
-            "make":"Chevrolet",
-            "model":"Silverado",
-            "year":2021,
-            "passengerCapacity":4,
-            "carSeats":0,
-            "boosterSeats":1,
-            "licensePlate":"JKL345",
-            "hasTrunk":false
-          },
-          {
-            "_id":1,
-            "type":"Sedan",
-            "make":"Toyota",
-            "model":"Corolla",
-            "year":2019,
-            "passengerCapacity":4,
-            "carSeats":0,
-            "boosterSeats":1,
-            "licensePlate":"GHI012",
-            "hasTrunk":true
+            "type": "compact car",
+            "make": "Toyota",
+            "model": "Prius",
+            "year": 2023,
+            "passengerCapacity": 4,
+            "carSeats": 1,
+            "boosterSeats": 0,
+            "licensePlate": "lsdkji",
+            "hasTrunk": true
           }
         ]
       },
       "isRider": true,
       "isDriver": true,
-      "friend_list":[],
-      "dependent_information":[],
-      "carpool_preference":{
-        "preferred_carpool_group_size":3,
-        "gender_preference":"no_preference",
-        "language_preferences":[
-          "English"
-        ]
+      "friend_list": [
+        "3c1a3d6e-2b4f-4d81-a5c9-d9a78djli123",
+        "f6e7d3b2-a4b5-4c6d-9e8f-c1b2c3d4e5f6"
+      ],
+      "dependent_information": [],
+      "carpool_preference": {
+        "carpool_with": 1,
+        "riders_preferred": 3,
+        "drivers_preferred": 2
       }
     }
   ]

@@ -9,7 +9,7 @@ ${profileContextString}
 PROFILE REQUIREMENTS:
 - Required fields for activity:
   * name: string (activity name)
-  * address: object containing street, city, state, country
+  * address: object containing street, city, state, country, latitude, longitude
   * start_time: string (in format "H:MM AM/PM")
   * end_time: string (in format "H:MM AM/PM")
 
@@ -38,6 +38,8 @@ VALIDATION RULES:
   * city: REQUIRED - Must be non-empty string
   * state: REQUIRED - Must be non-empty string
   * country: Optional - can be null
+  * latitude: Optional - must be a number if provided
+  * longitude: Optional - must be a number if provided
   * Activity CANNOT be marked as isComplete if street, city, or state is null
 - Time validation:
   * Must be in format "HH:MM"
@@ -52,7 +54,9 @@ RESPONSE FORMAT (STRICT JSON, NO ADDITIONAL TEXT):
       "street": string | null,
       "city": string | null,
       "state": string | null,
-      "country": string | null
+      "country": string | null,
+      "latitude": number | null,
+      "longitude": number | null
     },
     "time_window": {
       "start_time": string | null,
@@ -73,7 +77,9 @@ EXAMPLES:
       "street": "789 Elm St",
       "city": "Anytown",
       "state": "OK",
-      "country": null
+      "country": null,
+      "latitude": null,
+      "longitude": null
     },
     "time_window": {
       "start_time": "14:00",
@@ -93,7 +99,9 @@ EXAMPLES:
       "street": "123 Dance Ave",
       "city": null,
       "state": "TX",
-      "country": null
+      "country": null,
+      "latitude": null,
+      "longitude": null
     },
     "time_window": {
       "start_time": "13:00",

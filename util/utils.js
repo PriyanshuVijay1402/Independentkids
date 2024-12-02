@@ -1,9 +1,98 @@
 require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
 const Model = require('./vars/claudeEnum');
+const GeocodingService = require('../services/geocodingService');
+const nlp = require('compromise');
 
-// Initialize the client
+// Initialize the clients
 const anthropic = new Anthropic();
+
+async function validateAndFormatAddressString(inputString) {
+  try {
+    // Function to check if text contains a potential address pattern
+    function hasAddressPattern(text) {
+      // Match basic address pattern (number + street)
+      return /\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct|Circle|Cir|Plaza|Plz)\b/i.test(text);
+    }
+
+    // Function to extract complete address pattern
+    function extractCompleteAddresses(text) {
+      // Match pattern: number + street + city + state
+      // Example: "123 Main Street, San Francisco, CA"
+      const addressRegex = /\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct|Circle|Cir|Plaza|Plz)[,\s]+[A-Za-z\s]+,\s*[A-Z]{2}\b/gi;
+      return Array.from(text.matchAll(addressRegex)).map(match => ({
+        text: match[0],
+        index: match.index
+      }));
+    }
+
+    // Check if there's any address-like pattern
+    if (hasAddressPattern(inputString)) {
+      // Find complete addresses
+      const completeAddresses = extractCompleteAddresses(inputString);
+      
+      // If we found address pattern but no complete addresses (missing city/state), return false
+      if (completeAddresses.length === 0) {
+        return false;
+      }
+
+      // Find all address patterns (including incomplete ones)
+      const allAddressPatterns = Array.from(inputString.matchAll(/\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct|Circle|Cir|Plaza|Plz)\b/gi));
+      
+      // If there are more address patterns than complete addresses, some are incomplete
+      if (allAddressPatterns.length > completeAddresses.length) {
+        return false;
+      }
+
+      let currentString = inputString;
+      let lastValidResult = null;
+
+      // Validate each complete address
+      for (const {text: addressPhrase} of completeAddresses) {
+        const geocodeResult = await GeocodingService.geocodeAddress(addressPhrase);
+        
+        if (!geocodeResult.success) {
+          return false;
+        }
+
+        // Extract state from original address
+        const stateMatch = addressPhrase.match(/,\s*([A-Z]{2})\b/);
+        const originalState = stateMatch ? stateMatch[1] : null;
+        
+        // Extract state from geocoded result
+        const geocodedState = geocodeResult.data.formattedAddress.match(/\b([A-Z]{2})\b/);
+        const resultState = geocodedState ? geocodedState[1] : null;
+        
+        // Verify state matches
+        if (!originalState || !resultState || originalState !== resultState) {
+          return false;
+        }
+
+        // Replace the address in the current string
+        currentString = currentString.replace(
+          addressPhrase,
+          `${geocodeResult.data.formattedAddress} (Latitude: ${geocodeResult.data.latitude}, Longitude: ${geocodeResult.data.longitude})`
+        );
+        lastValidResult = geocodeResult;
+      }
+
+      return {
+        success: true,
+        formattedString: currentString,
+        addressData: lastValidResult.data
+      };
+    }
+
+    // No address pattern found, return original string
+    return {
+      success: true,
+      formattedString: inputString
+    };
+  } catch (error) {
+    console.error('Error in validateAndFormatAddressString:', error);
+    return false;
+  }
+}
 
 async function claude(
   userMessage,
@@ -149,5 +238,6 @@ module.exports = {
   claude,
   extractJSON,
   extractDeepJSON,
-  assembleDependent
+  assembleDependent,
+  validateAndFormatAddressString
 };
