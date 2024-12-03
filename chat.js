@@ -249,21 +249,29 @@ async function findCarpool() {
     const syncedUser = await syncResponse.json();
     console.log('Successfully synced user data:', syncedUser);
 
-    // // Now perform the carpool matching
-    // const matchResponse = await fetch(`http://localhost:3000/api/users/${TEST_USER}/match-carpool`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json'
-    //   }
-    // });
+    // Placeholder data for carpool matching
+    const matchData = {
+      dependent_name: "Test Dependent",
+      activity_name: "Test Activity",
+      radius: 5
+    };
 
-    // if (!matchResponse.ok) {
-    //   throw new Error(`HTTP error during matching! status: ${matchResponse.status}`);
-    // }
+    // Now perform the carpool matching
+    const matchResponse = await fetch(`http://localhost:3000/api/users/${TEST_USER}/match-carpool`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(matchData)
+    });
 
-    // const matches = await matchResponse.json();
-    // addMessage("Here are your potential carpool matches:");
-    // addInfo(matches);
+    if (!matchResponse.ok) {
+      throw new Error(`HTTP error during matching! status: ${matchResponse.status}`);
+    }
+
+    const matches = await matchResponse.json();
+    addMessage("Here are your potential carpool matches:");
+    addInfo(matches);
 
   } catch (error) {
     console.error('Error in findCarpool:', error);

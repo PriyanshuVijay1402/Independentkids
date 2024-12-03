@@ -11,15 +11,15 @@ async function validateAndFormatAddressString(inputString) {
   try {
     // Function to check if text contains a potential address pattern
     function hasAddressPattern(text) {
-      // Match basic address pattern (number + street)
-      return /\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct|Circle|Cir|Plaza|Plz)\b/i.test(text);
+      // Match basic address pattern (number + street + optional apt/suite)
+      return /\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct|Circle|Cir|Plaza|Plz)\b(\s*(#|Apt|Suite|Unit|Ste|[A-Za-z])?\.?\s*\d*\w*)?/i.test(text);
     }
 
     // Function to extract complete address pattern
     function extractCompleteAddresses(text) {
-      // Match pattern: number + street + city + state
-      // Example: "123 Main Street, San Francisco, CA"
-      const addressRegex = /\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct|Circle|Cir|Plaza|Plz)[,\s]+[A-Za-z\s]+,\s*[A-Z]{2}\b/gi;
+      // Match pattern: number + street + optional apt/suite + city + state
+      // Example: "123 Main Street #101, San Francisco, CA" or "123 Main Street Apt 101, San Francisco, CA"
+      const addressRegex = /\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct|Circle|Cir|Plaza|Plz)\b(\s*(#|Apt|Suite|Unit|Ste|[A-Za-z])?\.?\s*\d*\w*)?[,\s]+[A-Za-z\s]+,\s*[A-Z]{2}\b/gi;
       return Array.from(text.matchAll(addressRegex)).map(match => ({
         text: match[0],
         index: match.index
@@ -37,7 +37,7 @@ async function validateAndFormatAddressString(inputString) {
       }
 
       // Find all address patterns (including incomplete ones)
-      const allAddressPatterns = Array.from(inputString.matchAll(/\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct|Circle|Cir|Plaza|Plz)\b/gi));
+      const allAddressPatterns = Array.from(inputString.matchAll(/\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Way|Court|Ct|Circle|Cir|Plaza|Plz)\b(\s*(#|Apt|Suite|Unit|Ste|[A-Za-z])?\.?\s*\d*\w*)?/gi));
       
       // If there are more address patterns than complete addresses, some are incomplete
       if (allAddressPatterns.length > completeAddresses.length) {
@@ -234,10 +234,72 @@ function assembleDependent(stateManager) {
   }
 }
 
+async function findCarpoolMatches(user, dependent_name, activity_name, radius = 1) {
+  try {
+    // Find the specific dependent and activity
+    const dependent = user.dependent_information.find(d => d.name === dependent_name);
+    if (!dependent) {
+      throw new Error('Dependent not found');
+    }
+
+    const activity = dependent.activities.find(a => a.name === activity_name);
+    if (!activity) {
+      throw new Error('Activity not found');
+    }
+
+    // Convert radius from miles to approximate latitude/longitude degrees
+    // 1 degree of latitude ≈ 69 miles, 1 degree of longitude varies but roughly similar at moderate latitudes
+    const degreeRadius = radius / 69;
+
+    // Find potential matches
+    const potentialMatches = await User.find({
+      _id: { $ne: user._id }, // Exclude the requesting user
+      'dependent_information.activities': {
+        $elemMatch: {
+          name: activity_name,
+          'sharing_preferences.willing_to_share_rides': true,
+          // Match location within specified radius
+          'address.latitude': {
+            $gte: activity.address.latitude - degreeRadius,
+            $lte: activity.address.latitude + degreeRadius
+          },
+          'address.longitude': {
+            $gte: activity.address.longitude - degreeRadius,
+            $lte: activity.address.longitude + degreeRadius
+          }
+        }
+      }
+    });
+
+    // Process and format matches
+    const matches = potentialMatches.map(match => {
+      const matchingDependent = match.dependent_information.find(d => 
+        d.activities.some(a => a.name === activity_name)
+      );
+      
+      return {
+        user_id: match._id,
+        user_name: match.name,
+        dependent_name: matchingDependent.name,
+        address: match.address,
+        activity: matchingDependent.activities.find(a => a.name === activity_name)
+      };
+    });
+
+    return {
+      matches_found: matches.length,
+      matches: matches
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   claude,
   extractJSON,
   extractDeepJSON,
   assembleDependent,
-  validateAndFormatAddressString
+  validateAndFormatAddressString,
+  findCarpoolMatches
 };

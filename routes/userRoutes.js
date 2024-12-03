@@ -1,6 +1,7 @@
 const express = require('express');
 const User = require('../db/models/user');
 const { cacheUserProfile, getCachedUserProfile, deleteCachedUserProfile } = require('../config/redis');
+const { findCarpoolMatches } = require('../util/data_utils');
 const router = express.Router();
 
 // Get all users
@@ -46,6 +47,33 @@ router.post('/', async (req, res) => {
     res.status(201).json(newUser);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+});
+
+// Match carpool for a specific dependent and activity
+router.post('/:id/match-carpool', async (req, res) => {
+  try {
+    const { dependent_name, activity_name, radius } = req.body;
+
+    // Validate request body
+    if (!dependent_name || !activity_name) {
+      return res.status(400).json({ 
+        message: 'Both dependent_name and activity_name are required' 
+      });
+    }
+
+    // Find the requesting user
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Use the findCarpoolMatches utility function with optional radius
+    const matches = await findCarpoolMatches(user, dependent_name, activity_name, radius);
+    res.json(matches);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 
