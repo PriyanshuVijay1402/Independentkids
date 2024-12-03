@@ -46,7 +46,7 @@ function addInfo(info) {
   // Create a pre element to display the data
   const jsonElement = document.createElement('pre');
   jsonElement.classList.add('json-content');
-  
+
   // Handle both string and object types
   if (typeof info === 'string') {
     try {
@@ -131,7 +131,7 @@ async function sendMessage() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         prompt: message,
         isNewSession: false // Regular messages are not new sessions
       })
@@ -249,11 +249,22 @@ async function findCarpool() {
     const syncedUser = await syncResponse.json();
     console.log('Successfully synced user data:', syncedUser);
 
-    // Placeholder data for carpool matching
+    // Get the current dependent and activity from cache
+    const currentMatchResponse = await fetch(`http://localhost:3000/api/users/${TEST_USER}/current-match`);
+    if (!currentMatchResponse.ok) {
+      throw new Error(`HTTP error getting current match info! status: ${currentMatchResponse.status}`);
+    }
+    const currentMatch = await currentMatchResponse.json();
+
+    if (!currentMatch || !currentMatch.dependent_name || !currentMatch.activity_name) {
+      throw new Error('No current dependent/activity information found');
+    }
+
+    // Use the cached dependent and activity data for matching
     const matchData = {
-      dependent_name: "Test Dependent",
-      activity_name: "Test Activity",
-      radius: 5
+      dependent_name: currentMatch.dependent_name,
+      activity_name: currentMatch.activity_name,
+      radius: 2 // hard code to 2 miles for now, will need to be fetched from user's profile/preference later on.
     };
 
     // Now perform the carpool matching
@@ -270,7 +281,7 @@ async function findCarpool() {
     }
 
     const matches = await matchResponse.json();
-    addMessage("Here are your potential carpool matches:");
+    addMessage(`Finding carpool matches for ${currentMatch.dependent_name}'s ${currentMatch.activity_name} activity:`);
     addInfo(matches);
 
   } catch (error) {

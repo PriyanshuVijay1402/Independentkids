@@ -99,6 +99,37 @@ async function updateCachedDependent(userId, dependent) {
   }
 }
 
+// Cache current dependent and activity for matching
+async function cacheCurrentDependentActivity(userId, dependentName, activityName) {
+  try {
+    if (!redisClient.isOpen) {
+      await connectRedis();
+    }
+    await redisClient.set(`user:${userId}:current_match`, JSON.stringify({
+      dependent_name: dependentName,
+      activity_name: activityName
+    }), {
+      EX: 3600 // 1 hour expiration
+    });
+  } catch (error) {
+    console.error('Error caching current dependent/activity:', error);
+  }
+}
+
+// Get cached current dependent and activity for matching
+async function getCurrentDependentActivity(userId) {
+  try {
+    if (!redisClient.isOpen) {
+      await connectRedis();
+    }
+    const cached = await redisClient.get(`user:${userId}:current_match`);
+    return cached ? JSON.parse(cached) : null;
+  } catch (error) {
+    console.error('Error getting current dependent/activity:', error);
+    return null;
+  }
+}
+
 // Cleanup function for graceful shutdown
 async function cleanup() {
   try {
@@ -117,5 +148,7 @@ module.exports = {
   getCachedUserProfile,
   deleteCachedUserProfile,
   updateCachedDependent,
+  cacheCurrentDependentActivity,
+  getCurrentDependentActivity,
   cleanup
 };

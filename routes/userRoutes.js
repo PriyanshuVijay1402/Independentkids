@@ -1,6 +1,6 @@
 const express = require('express');
 const User = require('../db/models/user');
-const { cacheUserProfile, getCachedUserProfile, deleteCachedUserProfile } = require('../config/redis');
+const { cacheUserProfile, getCachedUserProfile, deleteCachedUserProfile, getCurrentDependentActivity } = require('../config/redis');
 const { findCarpoolMatches } = require('../util/data_utils');
 const router = express.Router();
 
@@ -32,6 +32,19 @@ router.get('/:id', async (req, res) => {
     } else {
       res.status(404).json({ message: 'User not found' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get current dependent and activity for matching
+router.get('/:id/current-match', async (req, res) => {
+  try {
+    const currentMatch = await getCurrentDependentActivity(req.params.id);
+    if (!currentMatch) {
+      return res.status(404).json({ message: 'No current match information found' });
+    }
+    res.json(currentMatch);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

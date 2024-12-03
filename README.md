@@ -4,9 +4,7 @@
 An AI-powered chat assistant that helps users create and manage their carpool profiles.
 The assistant guides users through a series of questions to understand their carpooling needs and preferences.
 
-
 [chatapp-demo.webm](https://github.com/user-attachments/assets/3ed06002-e6d5-44c2-b9f4-4cd708d8df2a)
-
 
 ## Features
 
@@ -103,20 +101,103 @@ npm run dev
 
 The application will be available at http://localhost:3000
 
-## API Endpoints
+## API Documentation
 
 ### AI Routes
-- POST `/api/ai/generate` - Generate AI response
-- POST `/api/ai/reset` - Reset user profile
+
+#### Generate AI Response
+- **Endpoint**: POST `/api/ai/generate`
+- **Description**: Generates an AI response based on user input
+- **Parameters**:
+  - Query: `userId` (required)
+  - Body: 
+    - `prompt` (optional): User input text
+    - `isNewSession` (optional): Boolean indicating if this is a new chat session
+- **Usage**:
+```json
+{
+  "prompt": "Hello",
+  "isNewSession": false
+}
+```
+
+#### Reset Profile
+- **Endpoint**: POST `/api/ai/reset`
+- **Description**: Resets a user's profile and starts a new chat session
+- **Parameters**:
+  - Body: `userId` (required)
+- **Usage**:
+```json
+{
+  "userId": "user_id_here"
+}
+```
 
 ### User Routes
-- GET `/api/users` - Get all users
-- GET `/api/users/:id` - Get user by ID
-- POST `/api/users` - Create new user
-- PUT `/api/users/:id` - Update user
-- DELETE `/api/users/:id` - Delete user
+
+#### Get All Users
+- **Endpoint**: GET `/api/users`
+- **Description**: Retrieves all users from the database
+
+#### Get User by ID
+- **Endpoint**: GET `/api/users/:id`
+- **Description**: Retrieves a specific user by ID (checks cache first, then database)
+
+#### Get Current Dependent Activity
+- **Endpoint**: GET `/api/users/:id/current-match`
+- **Description**: Retrieves current dependent and activity information for matching
+
+#### Create New User
+- **Endpoint**: POST `/api/users`
+- **Description**: Creates a new user profile
+- **Parameters**: User profile data in request body
+
+#### Match Carpool
+- **Endpoint**: POST `/api/users/:id/match-carpool`
+- **Description**: Finds carpool matches for a specific dependent and activity
+- **Parameters**:
+  - Body:
+    - `dependent_name` (required)
+    - `activity_name` (required)
+    - `radius` (optional): Search radius for matches
+- **Usage**:
+```json
+{
+  "dependent_name": "John",
+  "activity_name": "Soccer",
+  "radius": 5
+}
+```
+
+#### Update User
+- **Endpoint**: PUT `/api/users/:id`
+- **Description**: Updates an existing user's profile
+- **Parameters**: Updated user data in request body
+
+#### Sync Cache to Database
+- **Endpoint**: PATCH `/api/users/:id/sync-cache`
+- **Description**: Synchronizes cached user data with the database
+
+#### Delete User
+- **Endpoint**: DELETE `/api/users/:id`
+- **Description**: Deletes a user's profile and cached data
+
+### Geocoding Routes
+
+#### Geocode Address
+- **Endpoint**: POST `/api/geocode`
+- **Description**: Converts a text address into geographic coordinates
+- **Parameters**:
+  - Body: `address` (required)
+- **Usage**:
+```json
+{
+  "address": "123 Main St, City, State 12345"
+}
+```
 
 ## Development
-- A `Claude` API Key is required. Please provide a key in .env file at root level
+- A `ANTHROPIC_API_KEY` API Key is required. Please provide a key in .env file at root level
+- A `GOOGLE_MAPS_API_KEY` API Key is required. Please provide a key in .env file at root level
 - Use `npm run db` to start both MongoDB and Redis services
 - Use `npm run dev` to start the application server
