@@ -1,0 +1,33 @@
+{
+  "name": "carpool-profile-assistant",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "server": "nodemon app.js",
+    "mongodb": "echo 'Start MongoDB manually or ensure it is running as a Windows service'",
+    "redis": "echo 'Start Redis manually or ensure it is running on Windows'",
+    "db": "npm run mongodb && npm run redis",
+    "dev": "npm run server",
+    "seed": "node db/seeders/seed.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.31.0",
+    "@googlemaps/google-maps-services-js": "^3.4.0",
+    "axios": "^1.7.7",
+    "cloudinary": "^2.7.0",
+    "compromise": "^14.14.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.1",
+    "mongoose": "^8.0.3",
+    "multer": "^2.0.2",
+    "ollama": "^0.5.9",
+    "openai": "^5.12.0",
+    "redis": "^4.7.0",
+    "tesseract.js": "^6.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
