@@ -111,7 +111,7 @@ const dependentInformationSchema = new mongoose.Schema({
   school_info: schoolInfoSchema,
   activities: [activitySchema],
   additional_info: mongoose.Schema.Types.Mixed,
-  profileImage: { type: String, default: process.env.DEFAULT_PROFILE_IMAGE } // ✅ Added for child image upload
+  profileImage: { type: String, default: process.env.DEFAULT_PROFILE_IMAGE } //  Added for child image upload
 }, { _id: false });
 
 // Define the main user schema
@@ -120,7 +120,7 @@ const userSchema = new mongoose.Schema({
   address: addressSchema,
   email: String,
   phone: String,
-  profileImage: { type: String, default: process.env.DEFAULT_PROFILE_IMAGE }, // ✅ User image
+  profileImage: { type: String, default: process.env.DEFAULT_PROFILE_IMAGE }, //  User image
   safety_info: safetyInfoSchema,
   vehicles: [vehicleSchema],
   isRider: Boolean,
@@ -174,3 +174,4 @@ userSchema.pre('findOneAndUpdate', function (next) {
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
+
