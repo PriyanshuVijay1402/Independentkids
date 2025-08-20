@@ -62,6 +62,10 @@ router.post('/', async (req, res) => {
   const user = new User(req.body);
   try {
     const newUser = await user.save();
+    if (typeof newUser.generateProfileSummary === 'function') {
+      await newUser.generateProfileSummary();
+      await newUser.save();
+    }
     await cacheUserProfile(newUser._id, newUser);
     res.status(201).json(newUser);
   } catch (error) {
@@ -100,6 +104,11 @@ router.put('/:id', async (req, res) => {
     if (user) {
       Object.assign(user, req.body);
       const updatedUser = await user.save();
+      //  Add here (auto-regenerate summary on update)
+      if (typeof updatedUser.generateProfileSummary === 'function') {
+        await updatedUser.generateProfileSummary();
+        await updatedUser.save();
+      }
       await cacheUserProfile(req.params.id, updatedUser);
       res.json(updatedUser);
     } else {
