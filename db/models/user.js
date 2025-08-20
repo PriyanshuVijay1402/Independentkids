@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { generateProfileSummary } = require('../../services/profileSummaryService');
 
 // Define the address sub-schema
 const addressSchema = new mongoose.Schema({
@@ -143,12 +144,31 @@ const userSchema = new mongoose.Schema({
   ],
   trustScore: {
     type: Number,
-    default: ''
+    default: 100
   },
   generatedSummary: {
     type: String,
     default: ''
   }
+});
+
+
+//  NEW: Auto-generate profile summary before saving
+userSchema.pre('save', function (next) {
+  this.generatedSummary = generateProfileSummary(this);
+  next();
+});
+
+//  NEW: Auto-generate profile summary before updating
+userSchema.pre('findOneAndUpdate', function (next) {
+  const update = this.getUpdate();
+
+  if (update.$set) {
+    const simulatedUser = { ...this._conditions, ...update.$set };
+    update.$set.generatedSummary = generateProfileSummary(simulatedUser);
+  }
+
+  next();
 });
 
 const User = mongoose.model('User', userSchema);
