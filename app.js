@@ -1,4 +1,6 @@
+require('dotenv').config();
 const express = require('express');
+const bodyParser = require('body-parser');
 const routes = require('./routes/routes');
 const connectDB = require('./config/db');
 const ocrRoutes = require('./routes/ocrRoutes');// Add this for OCR routing
@@ -60,6 +62,10 @@ app.use('/api', rideRoutes);
 // after your other route imports
 const rematchRoutes = require('./routes/rematchRoutes');
 app.use('/api/rematch', rematchRoutes);
+
+const summaryRoutes = require('./routes/summaryRoutes');
+app.use('/api', summaryRoutes);
+
 
 
 // Error handling
