@@ -9,47 +9,56 @@ const {
   setupGlobalErrorHandlers
 } = require('./middleware');
 const geocodeRoutes = require('./routes/geocodeRoutes');
+const trustRoutes = require('./routes/trustRoutes');
+const { loadModels } = require('./services/localVisionClient');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Connect to MongoDB and Redis
 (async () => {
   try {
-    await connectDB();
-    console.log('MongoDB connected successfully');
+    // Load AI models before server starts
+    console.log('[Startup] Loading face detection models...');
+    await loadModels();
+    console.log('[Startup] Face detection models loaded successfully.');
 
+    // Connect to MongoDB
+    await connectDB();
+    console.log('[Startup] MongoDB connected successfully.');
+
+    // Connect to Redis
     await redisClient.connect();
-    console.log('Redis connected successfully');
+    console.log('[Startup] Redis connected successfully.');
+
+    // Middleware
+    setupBasicMiddleware(app);
+    app.use(debugMiddleware);
+
+    // Routes
+    app.use('/', routes);
+    app.use('/api/geocode', geocodeRoutes);
+    app.use('/api/trust', trustRoutes);
+
+    // Error handling middleware
+    app.use(errorHandlingMiddleware);
+
+    // Global error handlers
+    setupGlobalErrorHandlers();
+
+    // Start server
+    app.listen(port, () => {
+      console.log(`[Server] Running at http://localhost:${port}`);
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', async () => {
+      console.log('[Shutdown] SIGTERM received. Closing server...');
+      await redisClient.quit();
+      process.exit(0);
+    });
 
   } catch (error) {
-    console.error('Error connecting to databases:', error);
+    console.error('[Startup Error]', error);
     process.exit(1);
   }
 })();
-
-// Setup middleware
-setupBasicMiddleware(app);
-app.use(debugMiddleware);
-
-// Use routes
-app.use('/', routes);
-app.use('/api/geocode', geocodeRoutes);
-
-// Error handling
-app.use(errorHandlingMiddleware);
-
-// Setup global error handlers
-setupGlobalErrorHandlers();
-
-// Start server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received. Closing HTTP server and database connections...');
-  await redisClient.quit();
-  process.exit(0);
-});

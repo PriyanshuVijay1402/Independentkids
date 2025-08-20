@@ -7,7 +7,7 @@ const findCarpoolButton = document.createElement('button');
 // following id changes when rerun "npm run seed"
 // need to find out new id in MongoDB
 // let TEST_USER = "674de5ac85a6306d9791bb79"
-let TEST_USER = "674de5ac85a6306d9791bb7a"
+let TEST_USER = "6881eadec944d64906df81e8"
 
 // Add reset button
 resetButton.id = 'reset-button';

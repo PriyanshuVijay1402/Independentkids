@@ -173,6 +173,17 @@
         }
     </style>
 </head>
+<form id="upload-form" enctype="multipart/form-data" method="POST" action="http://localhost:3000/api/trust/upload">
+
+    <h3>Upload Photo and License</h3>
+    <label>Photo:
+        <input type="file" name="photo" accept="image/*" required>
+    </label><br><br>
+    <label>License:
+        <input type="file" name="license" accept="image/*" required>
+    </label><br><br>
+    <button type="submit">Upload</button>
+</form>
 <body>
     <div class="chat-interface">
         <div class="chat-header">
@@ -187,3 +198,4 @@
     <script src="chat.js"></script>
 </body>
 </html>
+
