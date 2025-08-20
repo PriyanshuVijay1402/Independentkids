@@ -1,4 +1,3 @@
-// services/claudeService.js
 const axios = require('axios');
 
 async function callClaude(prompt, { model = "claude-3.5-sonnet-20240620", max_tokens = 300 } = {}) {
